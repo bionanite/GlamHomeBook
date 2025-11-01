@@ -154,6 +154,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Beautician service management routes
+  // Get beautician's own services
+  app.get('/api/beautician/services', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const beautician = await storage.getBeauticianByUserId(userId);
+      
+      if (!beautician) {
+        return res.status(404).json({ message: "Beautician profile not found" });
+      }
+
+      const services = await storage.getServicesByBeauticianId(beautician.id);
+      res.json(services);
+    } catch (error) {
+      console.error("Error fetching beautician services:", error);
+      res.status(500).json({ message: "Failed to fetch services" });
+    }
+  });
+
+  // Create a new service
+  app.post('/api/beautician/services', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const beautician = await storage.getBeauticianByUserId(userId);
+      
+      if (!beautician) {
+        return res.status(404).json({ message: "Beautician profile not found" });
+      }
+
+      const { name, price, duration } = req.body;
+      
+      if (!name || !price || !duration) {
+        return res.status(400).json({ message: "Name, price, and duration are required" });
+      }
+
+      const service = await storage.createService({
+        beauticianId: beautician.id,
+        name,
+        price: parseInt(price),
+        duration: parseInt(duration)
+      });
+
+      res.status(201).json(service);
+    } catch (error) {
+      console.error("Error creating service:", error);
+      res.status(500).json({ message: "Failed to create service" });
+    }
+  });
+
+  // Update a service
+  app.patch('/api/beautician/services/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const beautician = await storage.getBeauticianByUserId(userId);
+      
+      if (!beautician) {
+        return res.status(404).json({ message: "Beautician profile not found" });
+      }
+
+      // Verify the service belongs to this beautician
+      const services = await storage.getServicesByBeauticianId(beautician.id);
+      const serviceExists = services.find(s => s.id === req.params.id);
+      
+      if (!serviceExists) {
+        return res.status(403).json({ message: "You can only update your own services" });
+      }
+
+      const { name, price, duration } = req.body;
+      const updateData: any = {};
+      
+      if (name !== undefined) updateData.name = name;
+      if (price !== undefined) updateData.price = parseInt(price);
+      if (duration !== undefined) updateData.duration = parseInt(duration);
+
+      const service = await storage.updateService(req.params.id, updateData);
+      res.json(service);
+    } catch (error) {
+      console.error("Error updating service:", error);
+      res.status(500).json({ message: "Failed to update service" });
+    }
+  });
+
+  // Delete a service
+  app.delete('/api/beautician/services/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const beautician = await storage.getBeauticianByUserId(userId);
+      
+      if (!beautician) {
+        return res.status(404).json({ message: "Beautician profile not found" });
+      }
+
+      // Verify the service belongs to this beautician
+      const services = await storage.getServicesByBeauticianId(beautician.id);
+      const serviceExists = services.find(s => s.id === req.params.id);
+      
+      if (!serviceExists) {
+        return res.status(403).json({ message: "You can only delete your own services" });
+      }
+
+      await storage.deleteService(req.params.id);
+      res.json({ message: "Service deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      res.status(500).json({ message: "Failed to delete service" });
+    }
+  });
+
   // Admin routes - protected by isAuthenticated and admin role check
   const isAdmin = async (req: any, res: any, next: any) => {
     const userId = req.user?.claims?.sub;
