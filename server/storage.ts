@@ -1,38 +1,217 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
+import {
+  users,
+  beauticians,
+  services,
+  bookings,
+  reviews,
+  type User,
+  type UpsertUser,
+  type Beautician,
+  type InsertBeautician,
+  type Service,
+  type InsertService,
+  type Booking,
+  type InsertBooking,
+  type Review,
+  type InsertReview,
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, and, gte, desc } from "drizzle-orm";
 
-// modify the interface with any CRUD methods
-// you might need
-
+// Interface for storage operations
 export interface IStorage {
+  // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  updateUserRole(id: string, role: string, phone?: string): Promise<User | undefined>;
+  
+  // Beautician operations
+  createBeautician(beautician: InsertBeautician): Promise<Beautician>;
+  getBeautician(id: string): Promise<Beautician | undefined>;
+  getBeauticianByUserId(userId: string): Promise<Beautician | undefined>;
+  getAllBeauticians(): Promise<Beautician[]>;
+  updateBeautician(id: string, data: Partial<InsertBeautician>): Promise<Beautician | undefined>;
+  
+  // Service operations
+  createService(service: InsertService): Promise<Service>;
+  getServicesByBeauticianId(beauticianId: string): Promise<Service[]>;
+  
+  // Booking operations
+  createBooking(booking: InsertBooking): Promise<Booking>;
+  getBooking(id: string): Promise<Booking | undefined>;
+  getBookingsByCustomerId(customerId: string): Promise<Booking[]>;
+  getBookingsByBeauticianId(beauticianId: string): Promise<Booking[]>;
+  updateBookingStatus(id: string, status: string): Promise<Booking | undefined>;
+  
+  // Review operations
+  createReview(review: InsertReview): Promise<Review>;
+  getReviewsByBeauticianId(beauticianId: string): Promise<Review[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
+  // User operations
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  async updateUserRole(id: string, role: string, phone?: string): Promise<User | undefined> {
+    const updateData: any = { role, updatedAt: new Date() };
+    if (phone) {
+      updateData.phone = phone;
+    }
+    const [user] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  // Beautician operations
+  async createBeautician(beauticianData: InsertBeautician): Promise<Beautician> {
+    const [beautician] = await db
+      .insert(beauticians)
+      .values(beauticianData)
+      .returning();
+    return beautician;
+  }
+
+  async getBeautician(id: string): Promise<Beautician | undefined> {
+    const [beautician] = await db
+      .select()
+      .from(beauticians)
+      .where(eq(beauticians.id, id));
+    return beautician;
+  }
+
+  async getBeauticianByUserId(userId: string): Promise<Beautician | undefined> {
+    const [beautician] = await db
+      .select()
+      .from(beauticians)
+      .where(eq(beauticians.userId, userId));
+    return beautician;
+  }
+
+  async getAllBeauticians(): Promise<Beautician[]> {
+    return await db
+      .select()
+      .from(beauticians)
+      .where(eq(beauticians.isApproved, true))
+      .orderBy(desc(beauticians.rating));
+  }
+
+  async updateBeautician(id: string, data: Partial<InsertBeautician>): Promise<Beautician | undefined> {
+    const [beautician] = await db
+      .update(beauticians)
+      .set(data)
+      .where(eq(beauticians.id, id))
+      .returning();
+    return beautician;
+  }
+
+  // Service operations
+  async createService(serviceData: InsertService): Promise<Service> {
+    const [service] = await db
+      .insert(services)
+      .values(serviceData)
+      .returning();
+    return service;
+  }
+
+  async getServicesByBeauticianId(beauticianId: string): Promise<Service[]> {
+    return await db
+      .select()
+      .from(services)
+      .where(eq(services.beauticianId, beauticianId));
+  }
+
+  // Booking operations
+  async createBooking(bookingData: InsertBooking): Promise<Booking> {
+    const [booking] = await db
+      .insert(bookings)
+      .values(bookingData)
+      .returning();
+    return booking;
+  }
+
+  async getBooking(id: string): Promise<Booking | undefined> {
+    const [booking] = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, id));
+    return booking;
+  }
+
+  async getBookingsByCustomerId(customerId: string): Promise<Booking[]> {
+    return await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.customerId, customerId))
+      .orderBy(desc(bookings.scheduledDate));
+  }
+
+  async getBookingsByBeauticianId(beauticianId: string): Promise<Booking[]> {
+    return await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.beauticianId, beauticianId))
+      .orderBy(desc(bookings.scheduledDate));
+  }
+
+  async updateBookingStatus(id: string, status: string): Promise<Booking | undefined> {
+    const [booking] = await db
+      .update(bookings)
+      .set({ status })
+      .where(eq(bookings.id, id))
+      .returning();
+    return booking;
+  }
+
+  // Review operations
+  async createReview(reviewData: InsertReview): Promise<Review> {
+    const [review] = await db
+      .insert(reviews)
+      .values(reviewData)
+      .returning();
+    
+    // Update beautician rating
+    const beauticianReviews = await this.getReviewsByBeauticianId(reviewData.beauticianId);
+    const avgRating = beauticianReviews.reduce((sum, r) => sum + r.rating, 0) / beauticianReviews.length;
+    
+    await db
+      .update(beauticians)
+      .set({
+        rating: avgRating.toFixed(2),
+        reviewCount: beauticianReviews.length,
+      })
+      .where(eq(beauticians.id, reviewData.beauticianId));
+    
+    return review;
+  }
+
+  async getReviewsByBeauticianId(beauticianId: string): Promise<Review[]> {
+    return await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.beauticianId, beauticianId))
+      .orderBy(desc(reviews.createdAt));
+  }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

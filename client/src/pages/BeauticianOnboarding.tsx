@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import { ChevronRight, ChevronLeft, Check, Sparkles } from "lucide-react";
 
 const SERVICES = [
@@ -33,6 +37,7 @@ const LOCATIONS = [
 export default function BeauticianOnboarding() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { user, isLoading, isAuthenticated } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   
   // Form data
@@ -51,6 +56,86 @@ export default function BeauticianOnboarding() {
     serviceAreas: [] as string[],
     startingPrice: "",
     availability: "flexible",
+  });
+
+  // Pre-fill user data if logged in
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: `${(user as any).firstName || ''} ${(user as any).lastName || ''}`.trim(),
+        email: (user as any).email || '',
+      }));
+    }
+  }, [user]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to become a beautician.",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+    }
+  }, [isAuthenticated, isLoading, toast]);
+
+  const onboardMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/beauticians/onboard", {
+        method: "POST",
+        body: JSON.stringify({
+          phone: formData.phone,
+          bio: formData.bio,
+          experience: formData.experience,
+          startingPrice: parseInt(formData.startingPrice),
+          availability: formData.availability,
+          serviceAreas: formData.serviceAreas,
+          services: formData.services,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to submit application");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Application Submitted!",
+        description: "We'll review your application and get back to you within 24 hours.",
+      });
+      setTimeout(() => {
+        navigate("/");
+      }, 2000);
+    },
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to submit application. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const totalSteps = 3;
@@ -98,17 +183,18 @@ export default function BeauticianOnboarding() {
       return;
     }
 
-    // Success
-    toast({
-      title: "Application Submitted!",
-      description: "We'll review your application and get back to you within 24 hours.",
-    });
-    
-    // Navigate to home after 2 seconds
-    setTimeout(() => {
-      navigate("/");
-    }, 2000);
+    onboardMutation.mutate();
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   const toggleService = (serviceId: string) => {
     setFormData(prev => ({
@@ -378,9 +464,10 @@ export default function BeauticianOnboarding() {
                   <Button
                     onClick={handleSubmit}
                     className="flex-1"
+                    disabled={onboardMutation.isPending}
                     data-testid="button-submit"
                   >
-                    Submit Application
+                    {onboardMutation.isPending ? "Submitting..." : "Submit Application"}
                   </Button>
                 )}
               </div>
