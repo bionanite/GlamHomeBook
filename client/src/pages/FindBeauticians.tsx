@@ -95,18 +95,34 @@ export default function FindBeauticians() {
   const [priceRange, setPriceRange] = useState([100, 400]);
   const [minRating, setMinRating] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState("rating");
 
-  const filteredBeauticians = beauticians.filter((beautician) => {
-    const matchesSearch = beautician.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      beautician.location.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesService = selectedService === "all" || 
-      beautician.specialties.some(s => s.toLowerCase().includes(selectedService.toLowerCase()));
-    const matchesLocation = selectedLocation === "all" || beautician.location === selectedLocation;
-    const matchesPrice = beautician.startingPrice >= priceRange[0] && beautician.startingPrice <= priceRange[1];
-    const matchesRating = beautician.rating >= minRating;
+  const filteredBeauticians = beauticians
+    .filter((beautician) => {
+      const matchesSearch = beautician.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        beautician.location.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesService = selectedService === "all" || 
+        beautician.specialties.some(s => s.toLowerCase().includes(selectedService.toLowerCase()));
+      const matchesLocation = selectedLocation === "all" || beautician.location === selectedLocation;
+      const matchesPrice = beautician.startingPrice >= priceRange[0] && beautician.startingPrice <= priceRange[1];
+      const matchesRating = beautician.rating >= minRating;
 
-    return matchesSearch && matchesService && matchesLocation && matchesPrice && matchesRating;
-  });
+      return matchesSearch && matchesService && matchesLocation && matchesPrice && matchesRating;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "rating":
+          return b.rating - a.rating;
+        case "price-low":
+          return a.startingPrice - b.startingPrice;
+        case "price-high":
+          return b.startingPrice - a.startingPrice;
+        case "reviews":
+          return b.reviewCount - a.reviewCount;
+        default:
+          return 0;
+      }
+    });
 
   const clearFilters = () => {
     setSelectedService("all");
@@ -257,10 +273,10 @@ export default function FindBeauticians() {
               {/* Beauticians Grid */}
               <div className="lg:col-span-3">
                 <div className="flex items-center justify-between mb-6">
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground" data-testid="text-results-count">
                     {filteredBeauticians.length} beautician{filteredBeauticians.length !== 1 ? 's' : ''} found
                   </p>
-                  <Select defaultValue="rating">
+                  <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="w-48" data-testid="select-sort">
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
