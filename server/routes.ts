@@ -2,9 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertBeauticianSchema, insertServiceSchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
+import { insertBeauticianSchema, insertServiceSchema, insertBookingSchema, insertReviewSchema, insertCustomerPreferencesSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import Stripe from "stripe";
+import { OfferService } from "./services/offers";
+import { triggerManualOfferGeneration } from "./scheduler";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -613,6 +615,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating booking status:", error);
       res.status(500).json({ message: "Failed to update booking status" });
+    }
+  });
+
+  // WhatsApp Notification & Offer Endpoints
+
+  // Get customer notification preferences
+  app.get('/api/notifications/preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const prefs = await storage.getCustomerPreferences(userId);
+      
+      if (!prefs) {
+        // Return default preferences if none exist
+        const user = await storage.getUser(userId);
+        return res.json({
+          customerId: userId,
+          whatsappNumber: user?.phone || null,
+          whatsappOptIn: true,
+          receiveOffers: true,
+          receiveReminders: true,
+          preferredContactTime: 'morning',
+        });
+      }
+      
+      res.json(prefs);
+    } catch (error) {
+      console.error("Error fetching notification preferences:", error);
+      res.status(500).json({ message: "Failed to fetch preferences" });
+    }
+  });
+
+  // Update customer notification preferences
+  app.put('/api/notifications/preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request body
+      const parseResult = insertCustomerPreferencesSchema.safeParse({
+        ...req.body,
+        customerId: userId,
+      });
+      
+      if (!parseResult.success) {
+        return res.status(400).json({
+          message: "Invalid preferences data",
+          errors: fromZodError(parseResult.error).toString(),
+        });
+      }
+
+      // Check if preferences exist
+      const existing = await storage.getCustomerPreferences(userId);
+      
+      let prefs;
+      if (existing) {
+        // Update existing
+        prefs = await storage.updateCustomerPreferences(userId, req.body);
+      } else {
+        // Create new
+        prefs = await storage.createCustomerPreferences({
+          ...req.body,
+          customerId: userId,
+        });
+      }
+      
+      res.json(prefs);
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ message: "Failed to update preferences" });
+    }
+  });
+
+  // Send personalized offer to a customer (admin only)
+  app.post('/api/offers/send', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { customerId } = req.body;
+      
+      if (!customerId) {
+        return res.status(400).json({ message: "Customer ID is required" });
+      }
+
+      const offerService = new OfferService(storage);
+      const result = await offerService.generateAndSendOffer(customerId);
+      
+      if (result.success) {
+        res.json({ message: result.message });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error("Error sending offer:", error);
+      res.status(500).json({ message: "Failed to send offer" });
+    }
+  });
+
+  // Trigger manual offer generation for all eligible customers (admin only)
+  app.post('/api/offers/trigger-automated', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const result = await triggerManualOfferGeneration();
+      res.json({
+        message: `Automated offer generation completed`,
+        sent: result.sent,
+        failed: result.failed,
+      });
+    } catch (error) {
+      console.error("Error triggering automated offers:", error);
+      res.status(500).json({ message: "Failed to trigger automated offers" });
+    }
+  });
+
+  // Get customer offers
+  app.get('/api/offers/customer', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const offers = await storage.getOffersByCustomerId(userId);
+      res.json(offers);
+    } catch (error) {
+      console.error("Error fetching customer offers:", error);
+      res.status(500).json({ message: "Failed to fetch offers" });
+    }
+  });
+
+  // Track offer click
+  app.post('/api/offers/:id/click', isAuthenticated, async (req, res) => {
+    try {
+      const offer = await storage.updateOfferStatus(req.params.id, 'clicked');
+      res.json(offer);
+    } catch (error) {
+      console.error("Error tracking offer click:", error);
+      res.status(500).json({ message: "Failed to track offer click" });
+    }
+  });
+
+  // Ultramessage webhook (for delivery status)
+  app.post('/api/webhooks/ultramessage', async (req, res) => {
+    try {
+      // Ultramessage sends delivery status updates
+      console.log('Ultramessage webhook received:', req.body);
+      // You can add logic here to update message status based on delivery reports
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error processing Ultramessage webhook:", error);
+      res.status(500).json({ message: "Webhook processing failed" });
     }
   });
 
