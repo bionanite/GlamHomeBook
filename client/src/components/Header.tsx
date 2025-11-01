@@ -13,8 +13,8 @@ export default function Header() {
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center space-x-2" data-testid="link-home">
             <div className="flex flex-col items-end">
-              <span className="font-serif text-2xl font-bold text-primary leading-none">Kosmospace</span>
-              <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground/80">Luxe Beauty</span>
+              <span className="font-serif text-xl sm:text-2xl font-bold text-primary leading-none">Kosmospace</span>
+              <span className="text-[10px] sm:text-xs font-medium tracking-widest uppercase text-muted-foreground/80">Luxe Beauty</span>
             </div>
           </Link>
 

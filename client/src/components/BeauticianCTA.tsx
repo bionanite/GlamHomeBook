@@ -14,7 +14,7 @@ export default function BeauticianCTA() {
     <section className="py-24 px-6 lg:px-8 bg-primary text-primary-foreground">
       <div className="max-w-5xl mx-auto">
         <Card className="bg-primary-foreground/10 backdrop-blur-sm border-primary-foreground/20">
-          <div className="p-12">
+          <div className="p-6 md:p-12">
             <div className="text-center mb-12">
               <h2 className="font-serif text-4xl md:text-5xl font-bold mb-4 text-primary-foreground">
                 Join Our Network of Elite Beauticians

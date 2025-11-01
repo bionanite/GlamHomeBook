@@ -46,19 +46,19 @@ export default function HeroSection() {
           </Button>
         </div>
 
-        <div className="bg-background/95 backdrop-blur-md rounded-2xl p-6 shadow-2xl max-w-3xl mx-auto">
-          <div className="flex flex-col md:flex-row gap-4">
+        <div className="bg-background/95 backdrop-blur-md rounded-2xl p-4 sm:p-6 shadow-2xl max-w-3xl mx-auto">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4">
             <div className="flex-1 relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Dubai location"
-                className="pl-10 h-12"
+                className="pl-10 h-11 md:h-12"
                 data-testid="input-location"
               />
             </div>
             <div className="flex-1">
               <Select>
-                <SelectTrigger className="h-12" data-testid="select-service-trigger">
+                <SelectTrigger className="h-11 md:h-12" data-testid="select-service-trigger">
                   <SelectValue placeholder="Select service" />
                 </SelectTrigger>
                 <SelectContent>
@@ -69,7 +69,7 @@ export default function HeroSection() {
                 </SelectContent>
               </Select>
             </div>
-            <Button size="lg" className="h-12 px-8" data-testid="button-search">
+            <Button size="lg" className="h-11 md:h-12 px-6 md:px-8" data-testid="button-search">
               <Search className="h-5 w-5 mr-2" />
               Search
             </Button>

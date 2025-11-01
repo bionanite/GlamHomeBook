@@ -60,7 +60,25 @@ const reviews = [
 export default function ReviewsCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const reviewsPerPage = 3;
+  
+  const getReviewsPerPage = () => {
+    if (typeof window === 'undefined') return 3;
+    if (window.innerWidth < 768) return 1;
+    if (window.innerWidth < 1024) return 2;
+    return 3;
+  };
+  
+  const [reviewsPerPage, setReviewsPerPage] = useState(getReviewsPerPage());
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setReviewsPerPage(getReviewsPerPage());
+      setCurrentIndex(0);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (!isAutoPlaying) return;
@@ -161,21 +179,21 @@ export default function ReviewsCarousel() {
           <Button
             variant="outline"
             size="icon"
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-background shadow-lg hover:scale-110 transition-transform h-12 w-12"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-4 bg-background shadow-lg hover:scale-110 transition-transform h-10 w-10 md:h-12 md:w-12"
             onClick={goToPrevious}
             data-testid="button-reviews-prev"
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
           </Button>
 
           <Button
             variant="outline"
             size="icon"
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-background shadow-lg hover:scale-110 transition-transform h-12 w-12"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 bg-background shadow-lg hover:scale-110 transition-transform h-10 w-10 md:h-12 md:w-12"
             onClick={goToNext}
             data-testid="button-reviews-next"
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
           </Button>
         </div>
 
