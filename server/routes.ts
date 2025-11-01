@@ -7,6 +7,8 @@ import { fromZodError } from "zod-validation-error";
 import Stripe from "stripe";
 import { OfferService } from "./services/offers";
 import { triggerManualOfferGeneration } from "./scheduler";
+import { AnalyticsDashboardService } from "./services/analytics-dashboard";
+import { subDays, startOfDay, endOfDay } from "date-fns";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -755,6 +757,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error tracking offer click:", error);
       res.status(500).json({ message: "Failed to track offer click" });
+    }
+  });
+
+  // Analytics routes (admin only)
+  const analyticsService = new AnalyticsDashboardService(storage);
+
+  // Get date range from query params or default to last 30 days
+  const getDateRange = (req: any) => {
+    const days = parseInt(req.query.days) || 30;
+    const endDate = endOfDay(new Date());
+    const startDate = startOfDay(subDays(endDate, days));
+    return { startDate, endDate };
+  };
+
+  // Get overview metrics
+  app.get('/api/admin/analytics/overview', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const dateRange = getDateRange(req);
+      const metrics = await analyticsService.getOverviewMetrics(dateRange);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching overview metrics:", error);
+      res.status(500).json({ message: "Failed to fetch overview metrics" });
+    }
+  });
+
+  // Get customer analytics
+  app.get('/api/admin/analytics/customers', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const dateRange = getDateRange(req);
+      const metrics = await analyticsService.getCustomerMetrics(dateRange);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching customer metrics:", error);
+      res.status(500).json({ message: "Failed to fetch customer metrics" });
+    }
+  });
+
+  // Get beautician analytics
+  app.get('/api/admin/analytics/beauticians', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const dateRange = getDateRange(req);
+      const metrics = await analyticsService.getBeauticianMetrics(dateRange);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching beautician metrics:", error);
+      res.status(500).json({ message: "Failed to fetch beautician metrics" });
+    }
+  });
+
+  // Get retention analytics
+  app.get('/api/admin/analytics/retention', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const dateRange = getDateRange(req);
+      const metrics = await analyticsService.getRetentionMetrics(dateRange);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching retention metrics:", error);
+      res.status(500).json({ message: "Failed to fetch retention metrics" });
     }
   });
 

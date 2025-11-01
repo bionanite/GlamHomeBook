@@ -70,6 +70,10 @@ export interface IStorage {
   
   // Analytics operations
   getAllCustomers(): Promise<User[]>;
+  getAllUsers(): Promise<User[]>;
+  getAllServices(): Promise<Service[]>;
+  getAllReviews(): Promise<Review[]>;
+  getAllCustomerPreferences(): Promise<CustomerPreferences[]>;
   
   // Customer preferences operations
   getCustomerPreferences(customerId: string): Promise<CustomerPreferences | undefined>;
@@ -355,6 +359,30 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(users)
       .where(eq(users.role, 'customer'));
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users);
+  }
+
+  async getAllServices(): Promise<Service[]> {
+    return await db
+      .select()
+      .from(services);
+  }
+
+  async getAllReviews(): Promise<Review[]> {
+    return await db
+      .select()
+      .from(reviews);
+  }
+
+  async getAllCustomerPreferences(): Promise<CustomerPreferences[]> {
+    return await db
+      .select()
+      .from(customerPreferences);
   }
 
   // Customer preferences operations
