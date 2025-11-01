@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Star, Quote } from "lucide-react";
 
 const reviews = [
   { name: "Fatima Al-Hashimi", location: "Dubai Marina", rating: 5, text: "The lash extensions are absolutely stunning! The beautician came right to my villa and the service was so professional. My lashes lasted 6 weeks and looked natural and beautiful. Perfect for busy moms like me!", image: "" },
@@ -29,37 +28,10 @@ const reviews = [
   { name: "Sheikha Al-Maktoum", location: "Nad Al Sheba", rating: 5, text: "I hosted a small gathering and booked the beautician for myself and three friends. We all got manicures together - it was like having a spa party at home! Everyone loved it.", image: "" },
   { name: "Rawdha Hamdan", location: "Jumeirah Park", rating: 5, text: "The professionalism is outstanding. Clean tools, quality products, and skilled techniques. My gel manicure lasted 3 weeks without chipping. This is now my go-to beauty service!", image: "" },
   { name: "Moza Ali", location: "The Springs", rating: 5, text: "I was preparing for family photos and needed everything perfect. The makeup artist created a flawless, camera-ready look that photographed beautifully. My husband couldn't stop complimenting!", image: "" },
-  { name: "Asma Darwish", location: "Arabian Ranches", rating: 5, text: "The lash technician is an artist! My lashes look full, long, and natural. She customized the length and curl to suit my eye shape. I receive compliments every day!", image: "" },
-  { name: "Khawla Ibrahim", location: "The Meadows", rating: 5, text: "I suffer from sensitive skin and was worried about reactions. The beautician used hypoallergenic products and my skin looked glowing after makeup. She truly cares about her clients!", image: "" },
-  { name: "Hamda Saif", location: "Dubai Marina", rating: 5, text: "The convenience is unmatched! I can schedule appointments around my work and family. The beautician is flexible and accommodating. My manicures always look salon-perfect.", image: "" },
-  { name: "Shaikha Juma", location: "Umm Suqeim", rating: 5, text: "Best decision to try this service! The pedicure included a wonderful foot massage and my feet feel rejuvenated. The nail art she did was intricate and beautiful. True professional!", image: "" },
-  { name: "Meera Al-Zaabi", location: "Al Barari", rating: 5, text: "I've recommended this service to all my friends! The makeup artist made me look and feel stunning for my anniversary dinner. My husband said I looked like a bride again!", image: "" },
-  { name: "Wadima Khalid", location: "Town Square", rating: 5, text: "As a bride-to-be, I'm so happy I found this service. The lash extensions look perfect in all my pre-wedding photos. Natural, elegant, and exactly what I wanted!", image: "" },
-  { name: "Noof Sultan", location: "Dubai Marina", rating: 5, text: "The beautician treats my home with respect and always cleans up perfectly after the service. My manicures are immaculate and last for weeks. Professional in every way!", image: "" },
-  { name: "Budoor Hassan", location: "JLT", rating: 5, text: "I was skeptical about the quality compared to salons, but this is even better! Personal attention, no rushing, and the beautician focuses only on you. Love this concept!", image: "" },
-  { name: "Maram Yousef", location: "Business Bay", rating: 5, text: "The makeup application technique is incredible. She contoured my face beautifully and the look was flawless all day. I felt confident and beautiful at my corporate event.", image: "" },
-  { name: "Nada Ahmad", location: "The Lakes", rating: 5, text: "I appreciate that the beautician speaks Arabic and understands our beauty preferences. The service feels personalized and culturally aware. My pedicure was relaxing and professional.", image: "" },
-  { name: "Afra Mohammed", location: "Palm Jumeirah", rating: 5, text: "The lash extensions are so comfortable I forget I'm wearing them! They look natural and beautiful. I wake up feeling put-together even without makeup.", image: "" },
-  { name: "Mouza Rashid", location: "Dubai Hills Estate", rating: 5, text: "Booking is easy, payment is secure, and the service is consistently excellent. My gel manicure never chips and the color selection is extensive. Very satisfied!", image: "" },
-  { name: "Mariam Al-Qubaisi", location: "Motor City", rating: 5, text: "The makeup artist created the perfect bridal look for my cousin's henna night. She used high-end products and the makeup lasted through hours of celebration. Stunning work!", image: "" },
-  { name: "Hind Abdulla", location: "Dubai Sports City", rating: 5, text: "I love the personalized service! The beautician remembers my preferences and suggests new nail designs each time. It feels like catching up with a friend who makes you beautiful!", image: "" },
-  { name: "Shamma Saeed", location: "Damac Hills", rating: 5, text: "The pedicure was thorough and relaxing. She paid attention to every detail and my feet look and feel amazing. The polish application is perfect with no mistakes.", image: "" },
-  { name: "Ameera Ali", location: "Jumeirah Golf Estates", rating: 5, text: "I needed last-minute makeup for a wedding and they accommodated me! The artist arrived on time and created a beautiful look quickly. Saved my evening!", image: "" },
-  { name: "Manal Khalifa", location: "Dubai Marina", rating: 5, text: "The lash extensions have changed my morning routine! I spend less time on makeup and still look polished. The beautician is skilled, hygienic, and professional.", image: "" },
-  { name: "Basma Hamdan", location: "Mirdif", rating: 5, text: "I'm pregnant and it's difficult to go out. This service brings the salon to me! The beautician is gentle, understanding, and makes sure I'm comfortable throughout. Blessing!", image: "" },
-  { name: "Ghaida Rashid", location: "Downtown Dubai", rating: 5, text: "The quality of products used is premium! My manicure looks glossy and perfect. The beautician is knowledgeable about the latest trends and techniques. Very impressed!", image: "" },
-  { name: "Roudha Saif", location: "Arabian Ranches", rating: 5, text: "I book makeup services for special occasions and it's always flawless. The artist knows how to create looks that photograph well and last all day. My go-to service!", image: "" },
-  { name: "Haya Sultan", location: "Al Furjan", rating: 5, text: "The pedicure service is luxurious! Feels like a spa treatment at home. She brought relaxing products and the massage was divine. My feet have never been so pampered.", image: "" },
-  { name: "Maitha Jaber", location: "Jumeirah Village Triangle", rating: 5, text: "I trust this service completely! The beautician is certified, professional, and talented. My lash extensions look beautiful and she explained aftercare thoroughly.", image: "" },
-  { name: "Anoud Hamad", location: "Dubai Marina", rating: 5, text: "Perfect for busy women! I schedule during my work-from-home hours and it's so convenient. The manicures are pristine and the service is always on time. Love it!", image: "" },
-  { name: "Latifa Darwish", location: "Emirates Living", rating: 5, text: "The makeup artist is a magician! She covered my dark circles perfectly and made my eyes pop. I looked refreshed and radiant. Everyone asked what my secret was!", image: "" },
-  { name: "Sheikha Bin Saedan", location: "Dubai Hills", rating: 5, text: "I appreciate the attention to hygiene! All tools are sterilized and she wears proper protective equipment. My pedicure was safe, clean, and beautifully done.", image: "" },
-  { name: "Nouf Ahmed", location: "JBR", rating: 5, text: "The lash extensions are worth every dirham! They look stunning, feel comfortable, and last for weeks. The beautician is patient and skilled. I'm a customer for life!", image: "" },
 ];
 
 export default function ReviewsCarousel() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [scrollPosition, setScrollPosition] = useState(0);
   
   const getReviewsPerPage = () => {
     if (typeof window === 'undefined') return 3;
@@ -73,49 +45,28 @@ export default function ReviewsCarousel() {
   useEffect(() => {
     const handleResize = () => {
       setReviewsPerPage(getReviewsPerPage());
+      setScrollPosition(0);
     };
     
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [reviewsPerPage]);
 
+  // Continuous auto-scroll effect (right to left, Mac-style)
   useEffect(() => {
-    if (!isAutoPlaying) return;
-
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => {
-        const maxIndex = Math.ceil(reviews.length / reviewsPerPage) - 1;
-        return prev >= maxIndex ? 0 : prev + 1;
+      setScrollPosition((prev) => {
+        const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+        const nextPosition = prev + 1;
+        // Loop back to start for infinite scrolling
+        return nextPosition >= totalPages ? 0 : nextPosition;
       });
-    }, 5000);
+    }, 4000); // Scroll every 4 seconds
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying, reviewsPerPage]);
+  }, [reviewsPerPage]);
 
-  const goToPrevious = () => {
-    setIsAutoPlaying(false);
-    setCurrentIndex((prev) => {
-      const maxIndex = Math.ceil(reviews.length / reviewsPerPage) - 1;
-      return prev <= 0 ? maxIndex : prev - 1;
-    });
-  };
-
-  const goToNext = () => {
-    setIsAutoPlaying(false);
-    setCurrentIndex((prev) => {
-      const maxIndex = Math.ceil(reviews.length / reviewsPerPage) - 1;
-      return prev >= maxIndex ? 0 : prev + 1;
-    });
-  };
-
-  const visibleReviews = reviews.slice(
-    currentIndex * reviewsPerPage,
-    (currentIndex + 1) * reviewsPerPage
-  );
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
 
   return (
     <section className="py-24 px-6 lg:px-8 overflow-hidden">
@@ -132,12 +83,12 @@ export default function ReviewsCarousel() {
         <div className="relative">
           <div className="overflow-hidden">
             <div
-              className="flex transition-transform duration-700 ease-in-out gap-8"
+              className="flex transition-transform duration-1000 ease-in-out gap-8"
               style={{
-                transform: `translateX(-${currentIndex * 100}%)`,
+                transform: `translateX(-${scrollPosition * 100}%)`,
               }}
             >
-              {Array.from({ length: Math.ceil(reviews.length / reviewsPerPage) }).map((_, pageIndex) => (
+              {Array.from({ length: totalPages }).map((_, pageIndex) => (
                 <div
                   key={pageIndex}
                   className={`min-w-full grid gap-8 ${
@@ -182,40 +133,17 @@ export default function ReviewsCarousel() {
               ))}
             </div>
           </div>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-4 bg-background shadow-lg hover:scale-110 transition-transform h-10 w-10 md:h-12 md:w-12"
-            onClick={goToPrevious}
-            data-testid="button-reviews-prev"
-          >
-            <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
-          </Button>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 bg-background shadow-lg hover:scale-110 transition-transform h-10 w-10 md:h-12 md:w-12"
-            onClick={goToNext}
-            data-testid="button-reviews-next"
-          >
-            <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
-          </Button>
         </div>
 
+        {/* Minimal progress indicators */}
         <div className="flex justify-center gap-2 mt-12">
-          {Array.from({ length: Math.ceil(reviews.length / reviewsPerPage) }).map((_, index) => (
-            <button
+          {Array.from({ length: totalPages }).map((_, index) => (
+            <div
               key={index}
-              onClick={() => {
-                setIsAutoPlaying(false);
-                setCurrentIndex(index);
-              }}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                index === currentIndex ? "w-12 bg-primary" : "w-2 bg-muted hover-elevate"
+              className={`h-1.5 rounded-full transition-all duration-500 ${
+                index === scrollPosition ? "w-8 bg-primary" : "w-1.5 bg-muted"
               }`}
-              data-testid={`button-reviews-dot-${index}`}
+              data-testid={`indicator-reviews-${index}`}
             />
           ))}
         </div>
