@@ -8,12 +8,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div>
             <div className="mb-4">
-              <h3 className="font-serif text-2xl font-bold text-primary leading-none mb-2">
-                Kosmospace
-              </h3>
-              <p className="text-sm font-medium tracking-widest uppercase bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-                Luxe Beauty
-              </p>
+              <div className="flex flex-col items-end">
+                <h3 className="font-serif text-2xl font-bold text-primary leading-none mb-2">
+                  Kosmospace
+                </h3>
+                <p className="text-sm font-medium tracking-widest uppercase text-muted-foreground/80">
+                  Luxe Beauty
+                </p>
+              </div>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Dubai's premier platform for luxury home beauty services.

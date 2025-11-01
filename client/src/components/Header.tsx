@@ -12,9 +12,9 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center space-x-2" data-testid="link-home">
-            <div className="flex flex-col">
+            <div className="flex flex-col items-end">
               <span className="font-serif text-2xl font-bold text-primary leading-none">Kosmospace</span>
-              <span className="text-xs font-medium tracking-widest uppercase bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">Luxe Beauty</span>
+              <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground/80">Luxe Beauty</span>
             </div>
           </Link>
 
