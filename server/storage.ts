@@ -50,10 +50,14 @@ export interface IStorage {
   getBookingsByBeauticianId(beauticianId: string): Promise<Booking[]>;
   getAllBookings(): Promise<Booking[]>;
   updateBookingStatus(id: string, status: string): Promise<Booking | undefined>;
+  updateBookingPaymentIntent(id: string, paymentIntentId: string): Promise<Booking | undefined>;
+  cancelBooking(id: string): Promise<Booking | undefined>;
   
   // Review operations
   createReview(review: InsertReview): Promise<Review>;
   getReviewsByBeauticianId(beauticianId: string): Promise<Review[]>;
+  getReviewByBookingId(bookingId: string): Promise<Review | undefined>;
+  getService(id: string): Promise<Service | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -233,6 +237,24 @@ export class DatabaseStorage implements IStorage {
     return booking;
   }
 
+  async updateBookingPaymentIntent(id: string, paymentIntentId: string): Promise<Booking | undefined> {
+    const [booking] = await db
+      .update(bookings)
+      .set({ stripePaymentIntentId: paymentIntentId })
+      .where(eq(bookings.id, id))
+      .returning();
+    return booking;
+  }
+
+  async cancelBooking(id: string): Promise<Booking | undefined> {
+    const [booking] = await db
+      .update(bookings)
+      .set({ status: 'cancelled' })
+      .where(eq(bookings.id, id))
+      .returning();
+    return booking;
+  }
+
   // Review operations
   async createReview(reviewData: InsertReview): Promise<Review> {
     const [review] = await db
@@ -261,6 +283,22 @@ export class DatabaseStorage implements IStorage {
       .from(reviews)
       .where(eq(reviews.beauticianId, beauticianId))
       .orderBy(desc(reviews.createdAt));
+  }
+
+  async getReviewByBookingId(bookingId: string): Promise<Review | undefined> {
+    const [review] = await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.bookingId, bookingId));
+    return review;
+  }
+
+  async getService(id: string): Promise<Service | undefined> {
+    const [service] = await db
+      .select()
+      .from(services)
+      .where(eq(services.id, id));
+    return service;
   }
 }
 

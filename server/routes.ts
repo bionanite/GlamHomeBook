@@ -2,8 +2,16 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertBeauticianSchema, insertServiceSchema } from "@shared/schema";
+import { insertBeauticianSchema, insertServiceSchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import Stripe from "stripe";
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2025-10-29.clover",
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -289,6 +297,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting service:", error);
       res.status(500).json({ message: "Failed to delete service" });
+    }
+  });
+
+  // Booking routes
+  // Create a new booking
+  app.post('/api/bookings', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { beauticianId, serviceId, scheduledDate, location, notes } = req.body;
+
+      // Get service details for pricing
+      const service = await storage.getService(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Service not found" });
+      }
+
+      // Calculate amounts (10% platform fee)
+      const totalAmount = service.price;
+      const platformFee = Math.round(totalAmount * 0.1);
+      const beauticianEarnings = totalAmount - platformFee;
+
+      // Create Stripe payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: totalAmount * 100, // Convert AED to fils (cents)
+        currency: "aed",
+        metadata: {
+          customerId: userId,
+          beauticianId,
+          serviceId,
+        },
+      });
+
+      // Create booking
+      const booking = await storage.createBooking({
+        customerId: userId,
+        beauticianId,
+        serviceId,
+        scheduledDate: new Date(scheduledDate),
+        location,
+        status: 'pending',
+        totalAmount,
+        platformFee,
+        beauticianEarnings,
+        stripePaymentIntentId: paymentIntent.id,
+      });
+
+      res.status(201).json({
+        booking,
+        clientSecret: paymentIntent.client_secret,
+      });
+    } catch (error) {
+      console.error("Error creating booking:", error);
+      res.status(500).json({ message: "Failed to create booking" });
+    }
+  });
+
+  // Get customer bookings
+  app.get('/api/bookings/customer', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const bookingsData = await storage.getBookingsByCustomerId(userId);
+      
+      // Enrich bookings with related data
+      const enrichedBookings = await Promise.all(
+        bookingsData.map(async (booking) => {
+          const service = await storage.getService(booking.serviceId);
+          const beautician = await storage.getBeautician(booking.beauticianId);
+          const user = beautician ? await storage.getUser(beautician.userId) : null;
+          const review = await storage.getReviewByBookingId(booking.id);
+          
+          return {
+            ...booking,
+            serviceName: service?.name || 'Unknown Service',
+            beauticianName: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
+            hasReview: !!review,
+          };
+        })
+      );
+      
+      res.json(enrichedBookings);
+    } catch (error) {
+      console.error("Error fetching customer bookings:", error);
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
+  // Get beautician bookings
+  app.get('/api/bookings/beautician', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const beautician = await storage.getBeauticianByUserId(userId);
+      
+      if (!beautician) {
+        return res.status(404).json({ message: "Beautician profile not found" });
+      }
+
+      const bookingsData = await storage.getBookingsByBeauticianId(beautician.id);
+      
+      // Enrich bookings with related data
+      const enrichedBookings = await Promise.all(
+        bookingsData.map(async (booking) => {
+          const service = await storage.getService(booking.serviceId);
+          const customer = await storage.getUser(booking.customerId);
+          
+          return {
+            ...booking,
+            serviceName: service?.name || 'Unknown Service',
+            customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown',
+          };
+        })
+      );
+      
+      res.json(enrichedBookings);
+    } catch (error) {
+      console.error("Error fetching beautician bookings:", error);
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
+  // Cancel a booking
+  app.patch('/api/bookings/:id/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const booking = await storage.getBooking(req.params.id);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      // Verify user owns this booking
+      if (booking.customerId !== userId) {
+        return res.status(403).json({ message: "You can only cancel your own bookings" });
+      }
+
+      // Only allow cancellation of pending bookings
+      if (booking.status !== 'pending') {
+        return res.status(400).json({ message: "Only pending bookings can be cancelled" });
+      }
+
+      const cancelledBooking = await storage.cancelBooking(req.params.id);
+      res.json(cancelledBooking);
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      res.status(500).json({ message: "Failed to cancel booking" });
+    }
+  });
+
+  // Review routes
+  // Create a review
+  app.post('/api/reviews', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bookingId, rating, comment } = req.body;
+
+      // Validate rating
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+
+      // Verify booking exists and belongs to user
+      const booking = await storage.getBooking(bookingId);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      if (booking.customerId !== userId) {
+        return res.status(403).json({ message: "You can only review your own bookings" });
+      }
+
+      // Check if review already exists
+      const existingReview = await storage.getReviewByBookingId(bookingId);
+      if (existingReview) {
+        return res.status(400).json({ message: "You have already reviewed this booking" });
+      }
+
+      // Create review
+      const review = await storage.createReview({
+        bookingId,
+        customerId: userId,
+        beauticianId: booking.beauticianId,
+        rating,
+        comment: comment || null,
+      });
+
+      res.status(201).json(review);
+    } catch (error) {
+      console.error("Error creating review:", error);
+      res.status(500).json({ message: "Failed to create review" });
+    }
+  });
+
+  // Get reviews for a beautician
+  app.get('/api/beauticians/:id/reviews', async (req, res) => {
+    try {
+      const reviewsData = await storage.getReviewsByBeauticianId(req.params.id);
+      
+      // Enrich reviews with customer names
+      const enrichedReviews = await Promise.all(
+        reviewsData.map(async (review) => {
+          const customer = await storage.getUser(review.customerId);
+          return {
+            ...review,
+            customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Anonymous',
+          };
+        })
+      );
+      
+      res.json(enrichedReviews);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      res.status(500).json({ message: "Failed to fetch reviews" });
     }
   });
 
