@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
+import AnimatedShowcase from "@/components/AnimatedShowcase";
 import ServicesSection from "@/components/ServicesSection";
 import FeaturedBeauticians from "@/components/FeaturedBeauticians";
 import HowItWorks from "@/components/HowItWorks";
@@ -12,6 +13,7 @@ export default function Home() {
       <Header />
       <main>
         <HeroSection />
+        <AnimatedShowcase />
         <ServicesSection />
         <HowItWorks />
         <FeaturedBeauticians />
