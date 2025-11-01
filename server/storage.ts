@@ -4,6 +4,9 @@ import {
   services,
   bookings,
   reviews,
+  customerPreferences,
+  offers,
+  whatsappMessages,
   type User,
   type UpsertUser,
   type Beautician,
@@ -14,6 +17,12 @@ import {
   type InsertBooking,
   type Review,
   type InsertReview,
+  type CustomerPreferences,
+  type InsertCustomerPreferences,
+  type Offer,
+  type InsertOffer,
+  type WhatsappMessage,
+  type InsertWhatsappMessage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc } from "drizzle-orm";
@@ -58,6 +67,24 @@ export interface IStorage {
   getReviewsByBeauticianId(beauticianId: string): Promise<Review[]>;
   getReviewByBookingId(bookingId: string): Promise<Review | undefined>;
   getService(id: string): Promise<Service | undefined>;
+  
+  // Analytics operations
+  getAllCustomers(): Promise<User[]>;
+  
+  // Customer preferences operations
+  getCustomerPreferences(customerId: string): Promise<CustomerPreferences | undefined>;
+  createCustomerPreferences(prefs: InsertCustomerPreferences): Promise<CustomerPreferences>;
+  updateCustomerPreferences(customerId: string, prefs: Partial<InsertCustomerPreferences>): Promise<CustomerPreferences | undefined>;
+  
+  // Offer operations
+  createOffer(offer: InsertOffer): Promise<Offer>;
+  getOffer(id: string): Promise<Offer | undefined>;
+  getOffersByCustomerId(customerId: string): Promise<Offer[]>;
+  updateOfferStatus(id: string, status: string): Promise<Offer | undefined>;
+  
+  // WhatsApp message operations
+  createWhatsappMessage(message: InsertWhatsappMessage): Promise<WhatsappMessage>;
+  getWhatsappMessagesByCustomerId(customerId: string): Promise<WhatsappMessage[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -320,6 +347,111 @@ export class DatabaseStorage implements IStorage {
       .from(services)
       .where(eq(services.id, id));
     return service;
+  }
+
+  // Analytics operations
+  async getAllCustomers(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.role, 'customer'));
+  }
+
+  // Customer preferences operations
+  async getCustomerPreferences(customerId: string): Promise<CustomerPreferences | undefined> {
+    const [prefs] = await db
+      .select()
+      .from(customerPreferences)
+      .where(eq(customerPreferences.customerId, customerId));
+    return prefs;
+  }
+
+  async createCustomerPreferences(prefsData: InsertCustomerPreferences): Promise<CustomerPreferences> {
+    const [prefs] = await db
+      .insert(customerPreferences)
+      .values(prefsData)
+      .returning();
+    return prefs;
+  }
+
+  async updateCustomerPreferences(
+    customerId: string, 
+    prefsData: Partial<InsertCustomerPreferences>
+  ): Promise<CustomerPreferences | undefined> {
+    const [prefs] = await db
+      .update(customerPreferences)
+      .set({ ...prefsData, updatedAt: new Date() })
+      .where(eq(customerPreferences.customerId, customerId))
+      .returning();
+    return prefs;
+  }
+
+  // Offer operations
+  async createOffer(offerData: InsertOffer): Promise<Offer> {
+    const [offer] = await db
+      .insert(offers)
+      .values(offerData)
+      .returning();
+    return offer;
+  }
+
+  async getOffer(id: string): Promise<Offer | undefined> {
+    const [offer] = await db
+      .select()
+      .from(offers)
+      .where(eq(offers.id, id));
+    return offer;
+  }
+
+  async getOffersByCustomerId(customerId: string): Promise<Offer[]> {
+    return await db
+      .select()
+      .from(offers)
+      .where(eq(offers.customerId, customerId))
+      .orderBy(desc(offers.createdAt));
+  }
+
+  async updateOfferStatus(id: string, status: string): Promise<Offer | undefined> {
+    const updateData: any = { status };
+    if (status === 'sent') {
+      updateData.sentAt = new Date();
+    } else if (status === 'clicked') {
+      updateData.clickedAt = new Date();
+    } else if (status === 'booked') {
+      updateData.bookedAt = new Date();
+    }
+
+    const [offer] = await db
+      .update(offers)
+      .set(updateData)
+      .where(eq(offers.id, id))
+      .returning();
+    return offer;
+  }
+
+  // WhatsApp message operations
+  async createWhatsappMessage(messageData: InsertWhatsappMessage): Promise<WhatsappMessage> {
+    const updateData: any = { ...messageData };
+    
+    // Set sentAt if not already set
+    if (!messageData.sentAt && messageData.providerMessageId) {
+      updateData.sentAt = new Date();
+      updateData.status = 'sent';
+    }
+
+    const [message] = await db
+      .insert(whatsappMessages)
+      .values(updateData)
+      .returning();
+    return message;
+  }
+
+  async getWhatsappMessagesByCustomerId(customerId: string): Promise<WhatsappMessage[]> {
+    return await db
+      .select()
+      .from(whatsappMessages)
+      .where(eq(whatsappMessages.customerId, customerId))
+      .orderBy(desc(whatsappMessages.createdAt));
   }
 }
 
