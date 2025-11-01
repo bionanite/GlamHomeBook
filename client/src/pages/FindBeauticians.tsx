@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
@@ -11,85 +12,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { Search, MapPin, Star, SlidersHorizontal, X } from "lucide-react";
+import { Search, MapPin, Star, SlidersHorizontal, X, Loader2 } from "lucide-react";
 import profile1 from "@assets/generated_images/Beautician_profile_one_9fa3b2a4.png";
 import profile2 from "@assets/generated_images/Beautician_profile_two_08398f98.png";
 import profile3 from "@assets/generated_images/Beautician_profile_three_da0a3188.png";
 
-const beauticians = [
-  {
-    id: 1,
-    name: "Sarah Al-Mansouri",
-    image: profile1,
-    specialties: ["Makeup", "Lashes"],
-    rating: 4.9,
-    reviewCount: 287,
-    startingPrice: 200,
-    location: "Dubai Marina",
-    yearsExperience: 8,
-    availability: "Available Today",
-  },
-  {
-    id: 2,
-    name: "Layla Hassan",
-    image: profile2,
-    specialties: ["Nails", "Manicure", "Pedicure"],
-    rating: 4.8,
-    reviewCount: 342,
-    startingPrice: 150,
-    location: "Downtown Dubai",
-    yearsExperience: 6,
-    availability: "Available Tomorrow",
-  },
-  {
-    id: 3,
-    name: "Amira Khan",
-    image: profile3,
-    specialties: ["Makeup", "Pedicure"],
-    rating: 5.0,
-    reviewCount: 198,
-    startingPrice: 180,
-    location: "Jumeirah",
-    yearsExperience: 10,
-    availability: "Available Today",
-  },
-  {
-    id: 4,
-    name: "Fatima Al-Zaabi",
-    image: profile1,
-    specialties: ["Lashes", "Makeup"],
-    rating: 4.9,
-    reviewCount: 256,
-    startingPrice: 220,
-    location: "Palm Jumeirah",
-    yearsExperience: 7,
-    availability: "Available Today",
-  },
-  {
-    id: 5,
-    name: "Noura Al-Suwaidi",
-    image: profile2,
-    specialties: ["Manicure", "Nails"],
-    rating: 4.7,
-    reviewCount: 189,
-    startingPrice: 140,
-    location: "Dubai Marina",
-    yearsExperience: 5,
-    availability: "Available Tomorrow",
-  },
-  {
-    id: 6,
-    name: "Maryam Al-Hashimi",
-    image: profile3,
-    specialties: ["Makeup", "Lashes", "Pedicure"],
-    rating: 5.0,
-    reviewCount: 312,
-    startingPrice: 250,
-    location: "Business Bay",
-    yearsExperience: 12,
-    availability: "Available Today",
-  },
-];
+const profileImages = [profile1, profile2, profile3];
+
+interface BeauticianData {
+  id: string;
+  userId: string;
+  name: string;
+  bio: string | null;
+  experience: string;
+  startingPrice: number;
+  availability: string;
+  rating: string;
+  reviewCount: number;
+  isApproved: boolean;
+  serviceAreas: string[];
+  createdAt: Date;
+}
 
 export default function FindBeauticians() {
   const [location] = useLocation();
@@ -98,10 +41,15 @@ export default function FindBeauticians() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedService, setSelectedService] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
-  const [priceRange, setPriceRange] = useState([100, 400]);
+  const [priceRange, setPriceRange] = useState([100, 500]);
   const [minRating, setMinRating] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("rating");
+
+  // Fetch beauticians from API
+  const { data: beauticiansData, isLoading } = useQuery<BeauticianData[]>({
+    queryKey: ["/api/beauticians"],
+  });
 
   // Apply URL parameters on component load
   useEffect(() => {
@@ -117,9 +65,23 @@ export default function FindBeauticians() {
     }
   }, [location]);
 
-  const handleViewProfile = (beauticianId: number) => {
+  const handleViewProfile = (beauticianId: string) => {
     window.location.href = `/beauticians/${beauticianId}`;
   };
+
+  // Map API data to display format
+  const beauticians = (beauticiansData || []).map((b, index) => ({
+    id: b.id,
+    name: b.name,
+    image: profileImages[index % profileImages.length],
+    specialties: ["Beauty Services"],
+    rating: parseFloat(b.rating) || 0,
+    reviewCount: b.reviewCount,
+    startingPrice: b.startingPrice,
+    location: b.serviceAreas[0] || "Dubai",
+    yearsExperience: b.experience === '1-2' ? 2 : b.experience === '3-5' ? 4 : b.experience === '6-10' ? 8 : 10,
+    availability: b.availability,
+  }));
 
   const filteredBeauticians = beauticians
     .filter((beautician) => {
@@ -296,90 +258,98 @@ export default function FindBeauticians() {
 
               {/* Beauticians Grid */}
               <div className="lg:col-span-3">
-                <div className="flex items-center justify-between mb-6">
-                  <p className="text-muted-foreground" data-testid="text-results-count">
-                    {filteredBeauticians.length} beautician{filteredBeauticians.length !== 1 ? 's' : ''} found
-                  </p>
-                  <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-48" data-testid="select-sort">
-                      <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="rating">Highest Rated</SelectItem>
-                      <SelectItem value="price-low">Price: Low to High</SelectItem>
-                      <SelectItem value="price-high">Price: High to Low</SelectItem>
-                      <SelectItem value="reviews">Most Reviews</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {filteredBeauticians.map((beautician) => (
-                    <Card key={beautician.id} className="hover-elevate transition-all duration-300">
-                      <CardContent className="p-6">
-                        <div className="flex gap-4 mb-4">
-                          <Avatar className="h-20 w-20">
-                            <AvatarImage src={beautician.image} alt={beautician.name} />
-                            <AvatarFallback>{beautician.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-lg mb-1" data-testid={`text-beautician-name-${beautician.id}`}>
-                              {beautician.name}
-                            </h3>
-                            <div className="flex items-center gap-1 mb-2">
-                              <Star className="h-4 w-4 fill-primary text-primary" />
-                              <span className="font-medium">{beautician.rating}</span>
-                              <span className="text-sm text-muted-foreground">
-                                ({beautician.reviewCount} reviews)
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <MapPin className="h-4 w-4" />
-                              {beautician.location}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {beautician.specialties.map((specialty, idx) => (
-                            <Badge key={idx} variant="secondary" data-testid={`badge-specialty-${beautician.id}-${idx}`}>
-                              {specialty}
-                            </Badge>
-                          ))}
-                        </div>
-
-                        <div className="flex items-center justify-between pt-4 border-t">
-                          <div>
-                            <p className="text-sm text-muted-foreground">Starting from</p>
-                            <p className="font-semibold text-lg">AED {beautician.startingPrice}</p>
-                          </div>
-                          <Button 
-                            onClick={() => handleViewProfile(beautician.id)}
-                            data-testid={`button-view-profile-${beautician.id}`}
-                          >
-                            View Profile
-                          </Button>
-                        </div>
-
-                        <p className="text-sm text-primary mt-3" data-testid={`text-availability-${beautician.id}`}>
-                          {beautician.availability}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                {filteredBeauticians.length === 0 && (
-                  <Card>
-                    <CardContent className="p-12 text-center">
-                      <p className="text-muted-foreground text-lg mb-4">
-                        No beauticians found matching your criteria
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-6">
+                      <p className="text-muted-foreground" data-testid="text-results-count">
+                        {filteredBeauticians.length} beautician{filteredBeauticians.length !== 1 ? 's' : ''} found
                       </p>
-                      <Button onClick={clearFilters} variant="outline" data-testid="button-clear-filters-empty">
-                        Clear Filters
-                      </Button>
-                    </CardContent>
-                  </Card>
+                      <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="w-48" data-testid="select-sort">
+                          <SelectValue placeholder="Sort by" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="rating">Highest Rated</SelectItem>
+                          <SelectItem value="price-low">Price: Low to High</SelectItem>
+                          <SelectItem value="price-high">Price: High to Low</SelectItem>
+                          <SelectItem value="reviews">Most Reviews</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {filteredBeauticians.map((beautician) => (
+                        <Card key={beautician.id} className="hover-elevate transition-all duration-300">
+                          <CardContent className="p-6">
+                            <div className="flex gap-4 mb-4">
+                              <Avatar className="h-20 w-20">
+                                <AvatarImage src={beautician.image} alt={beautician.name} />
+                                <AvatarFallback>{beautician.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-lg mb-1" data-testid={`text-beautician-name-${beautician.id}`}>
+                                  {beautician.name}
+                                </h3>
+                                <div className="flex items-center gap-1 mb-2">
+                                  <Star className="h-4 w-4 fill-primary text-primary" />
+                                  <span className="font-medium">{beautician.rating}</span>
+                                  <span className="text-sm text-muted-foreground">
+                                    ({beautician.reviewCount} reviews)
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <MapPin className="h-4 w-4" />
+                                  {beautician.location}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {beautician.specialties.map((specialty, idx) => (
+                                <Badge key={idx} variant="secondary" data-testid={`badge-specialty-${beautician.id}-${idx}`}>
+                                  {specialty}
+                                </Badge>
+                              ))}
+                            </div>
+
+                            <div className="flex items-center justify-between pt-4 border-t">
+                              <div>
+                                <p className="text-sm text-muted-foreground">Starting from</p>
+                                <p className="font-semibold text-lg">AED {beautician.startingPrice}</p>
+                              </div>
+                              <Button 
+                                onClick={() => handleViewProfile(beautician.id)}
+                                data-testid={`button-view-profile-${beautician.id}`}
+                              >
+                                View Profile
+                              </Button>
+                            </div>
+
+                            <p className="text-sm text-primary mt-3" data-testid={`text-availability-${beautician.id}`}>
+                              {beautician.availability}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {filteredBeauticians.length === 0 && (
+                      <Card>
+                        <CardContent className="p-12 text-center">
+                          <p className="text-muted-foreground text-lg mb-4">
+                            No beauticians found matching your criteria
+                          </p>
+                          <Button onClick={clearFilters} variant="outline" data-testid="button-clear-filters-empty">
+                            Clear Filters
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
                 )}
               </div>
             </div>

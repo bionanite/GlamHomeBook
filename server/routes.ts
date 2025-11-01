@@ -105,18 +105,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all beauticians
+  // Get all beauticians with user names
   app.get('/api/beauticians', async (req, res) => {
     try {
       const beauticians = await storage.getAllBeauticians();
-      res.json(beauticians);
+      
+      // Enrich with user names
+      const enrichedBeauticians = await Promise.all(
+        beauticians.map(async (beautician) => {
+          const user = await storage.getUser(beautician.userId);
+          return {
+            ...beautician,
+            name: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
+          };
+        })
+      );
+      
+      res.json(enrichedBeauticians);
     } catch (error) {
       console.error("Error fetching beauticians:", error);
       res.status(500).json({ message: "Failed to fetch beauticians" });
     }
   });
 
-  // Get beautician by ID with services
+  // Get beautician by ID with services and user info
   app.get('/api/beauticians/:id', async (req, res) => {
     try {
       const beautician = await storage.getBeautician(req.params.id);
@@ -125,7 +137,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const services = await storage.getServicesByBeauticianId(beautician.id);
-      res.json({ ...beautician, services });
+      const user = await storage.getUser(beautician.userId);
+      
+      res.json({ 
+        ...beautician, 
+        services,
+        name: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
+      });
     } catch (error) {
       console.error("Error fetching beautician:", error);
       res.status(500).json({ message: "Failed to fetch beautician" });
