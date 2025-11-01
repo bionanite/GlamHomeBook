@@ -183,19 +183,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Beautician profile not found" });
       }
 
-      const { name, price, duration } = req.body;
+      // Validate price and duration are integers
+      const price = Number(req.body.price);
+      const duration = Number(req.body.duration);
       
-      if (!name || !price || !duration) {
-        return res.status(400).json({ message: "Name, price, and duration are required" });
+      if (!Number.isInteger(price) || price <= 0) {
+        return res.status(400).json({ message: "Price must be a positive integer" });
+      }
+      
+      if (!Number.isInteger(duration) || duration <= 0) {
+        return res.status(400).json({ message: "Duration must be a positive integer" });
       }
 
-      const service = await storage.createService({
+      const validationResult = insertServiceSchema.safeParse({
         beauticianId: beautician.id,
-        name,
-        price: parseInt(price),
-        duration: parseInt(duration)
+        name: req.body.name,
+        price,
+        duration
       });
 
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid service data",
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const service = await storage.createService(validationResult.data);
       res.status(201).json(service);
     } catch (error) {
       console.error("Error creating service:", error);
@@ -221,12 +235,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You can only update your own services" });
       }
 
-      const { name, price, duration } = req.body;
+      // Validate and prepare update data
       const updateData: any = {};
       
-      if (name !== undefined) updateData.name = name;
-      if (price !== undefined) updateData.price = parseInt(price);
-      if (duration !== undefined) updateData.duration = parseInt(duration);
+      if (req.body.name !== undefined) {
+        updateData.name = req.body.name;
+      }
+      
+      if (req.body.price !== undefined) {
+        const price = Number(req.body.price);
+        if (!Number.isInteger(price) || price <= 0) {
+          return res.status(400).json({ message: "Price must be a positive integer" });
+        }
+        updateData.price = price;
+      }
+      
+      if (req.body.duration !== undefined) {
+        const duration = Number(req.body.duration);
+        if (!Number.isInteger(duration) || duration <= 0) {
+          return res.status(400).json({ message: "Duration must be a positive integer" });
+        }
+        updateData.duration = duration;
+      }
 
       const service = await storage.updateService(req.params.id, updateData);
       res.json(service);

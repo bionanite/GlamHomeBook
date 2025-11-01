@@ -85,6 +85,12 @@ export const insertBeauticianSchema = createInsertSchema(beauticians).omit({
 
 export const insertServiceSchema = createInsertSchema(services).omit({
   id: true,
+}).refine((data) => data.price > 0, {
+  message: "Price must be greater than 0",
+  path: ["price"],
+}).refine((data) => data.duration > 0, {
+  message: "Duration must be greater than 0",
+  path: ["duration"],
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).omit({

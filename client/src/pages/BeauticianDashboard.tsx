@@ -20,8 +20,8 @@ import { Plus, Edit, Trash2, Clock, DollarSign, Sparkles } from "lucide-react";
 
 const serviceSchema = z.object({
   name: z.string().min(1, "Service name is required"),
-  price: z.string().min(1, "Price is required"),
-  duration: z.string().min(1, "Duration is required"),
+  price: z.coerce.number().int().positive("Price must be greater than 0"),
+  duration: z.coerce.number().int().positive("Duration must be greater than 0"),
 });
 
 type ServiceFormData = z.infer<typeof serviceSchema>;
@@ -51,8 +51,8 @@ export default function BeauticianDashboard() {
     resolver: zodResolver(serviceSchema),
     defaultValues: {
       name: "",
-      price: "",
-      duration: "60",
+      price: 0,
+      duration: 60,
     },
   });
 
@@ -61,8 +61,8 @@ export default function BeauticianDashboard() {
     resolver: zodResolver(serviceSchema),
     defaultValues: {
       name: "",
-      price: "",
-      duration: "",
+      price: 0,
+      duration: 0,
     },
   });
 
@@ -135,8 +135,8 @@ export default function BeauticianDashboard() {
     setEditingService(service);
     editForm.reset({
       name: service.name,
-      price: service.price.toString(),
-      duration: service.duration.toString(),
+      price: service.price,
+      duration: service.duration,
     });
   };
 
