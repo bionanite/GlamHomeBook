@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -11,13 +11,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, CheckCircle, XCircle, Clock, User, MapPin, DollarSign } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, CheckCircle, XCircle, Clock, User, MapPin, DollarSign, MessageCircle, Send } from "lucide-react";
 import { format } from "date-fns";
 
 export default function AdminDashboard() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [selectedCustomer, setSelectedCustomer] = useState("");
 
   // Redirect if not admin
   useEffect(() => {
@@ -106,6 +108,52 @@ export default function AdminDashboard() {
     },
   });
 
+  // Fetch all customers
+  const { data: customers = [] } = useQuery<any[]>({
+    queryKey: ['/api/users'],
+    enabled: isAuthenticated && (user as any)?.role === 'admin',
+  });
+
+  // Send offer to customer mutation
+  const sendOfferMutation = useMutation({
+    mutationFn: async (customerId: string) => {
+      const res = await apiRequest('POST', '/api/offers/send', { customerId });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Offer sent successfully to customer" });
+      setSelectedCustomer("");
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to send offer", 
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Trigger automated offers mutation
+  const triggerAutomatedMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/offers/trigger-automated', {});
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ 
+        title: "Success", 
+        description: `Automated offers processed: ${data.sent} sent, ${data.failed} failed` 
+      });
+    },
+    onError: () => {
+      toast({ 
+        title: "Error", 
+        description: "Failed to trigger automated offers", 
+        variant: "destructive" 
+      });
+    },
+  });
+
   if (authLoading || !isAuthenticated || (user as any)?.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -132,12 +180,16 @@ export default function AdminDashboard() {
 
           {/* Tabs */}
           <Tabs defaultValue="beauticians" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className="grid w-full max-w-2xl grid-cols-3">
               <TabsTrigger value="beauticians" data-testid="tab-beauticians">
                 Beautician Applications ({pendingBeauticians.length})
               </TabsTrigger>
               <TabsTrigger value="bookings" data-testid="tab-bookings">
                 Bookings ({bookings.length})
+              </TabsTrigger>
+              <TabsTrigger value="notifications" data-testid="tab-notifications">
+                <MessageCircle className="w-4 h-4 mr-2" />
+                WhatsApp Offers
               </TabsTrigger>
             </TabsList>
 
@@ -330,6 +382,90 @@ export default function AdminDashboard() {
                   </Card>
                 ))
               )}
+            </TabsContent>
+
+            {/* WhatsApp Notifications Tab */}
+            <TabsContent value="notifications" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5 text-primary" />
+                    <CardTitle>WhatsApp Offer Management</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Send personalized beauty offers to customers via WhatsApp
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Manual Offer Sending */}
+                  <div className="space-y-4 pb-6 border-b">
+                    <h3 className="text-lg font-semibold">Send Offer to Customer</h3>
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                          <SelectTrigger data-testid="select-customer">
+                            <SelectValue placeholder="Select a customer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {customers.length === 0 ? (
+                              <SelectItem value="none" disabled>No customers found</SelectItem>
+                            ) : (
+                              customers.map((customer: any) => (
+                                <SelectItem key={customer.id} value={customer.id}>
+                                  {customer.firstName} {customer.lastName} ({customer.email})
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        onClick={() => selectedCustomer && sendOfferMutation.mutate(selectedCustomer)}
+                        disabled={!selectedCustomer || sendOfferMutation.isPending}
+                        data-testid="button-send-offer"
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        {sendOfferMutation.isPending ? "Sending..." : "Send Offer"}
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Analyzes customer's booking history and sends a personalized offer based on their preferences
+                    </p>
+                  </div>
+
+                  {/* Automated Offer Trigger */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Trigger Automated Offers</h3>
+                    <div>
+                      <Button
+                        onClick={() => triggerAutomatedMutation.mutate()}
+                        disabled={triggerAutomatedMutation.isPending}
+                        variant="secondary"
+                        className="w-full"
+                        data-testid="button-trigger-automated"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        {triggerAutomatedMutation.isPending ? "Processing..." : "Run Automated Offer Generation"}
+                      </Button>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Processes all eligible customers and sends personalized offers based on their booking patterns
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Scheduler Info */}
+                  <div className="bg-muted/50 rounded-md p-4 space-y-2">
+                    <h4 className="font-semibold text-sm">Automated Schedule</h4>
+                    <p className="text-sm text-muted-foreground">
+                      The system automatically sends offers twice daily:
+                    </p>
+                    <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                      <li>10:00 AM Dubai time (daily offers)</li>
+                      <li>2:00 PM Dubai time (afternoon reminders)</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
