@@ -19,10 +19,7 @@ export default function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/services" className="text-sm font-medium text-foreground hover-elevate px-3 py-2 rounded-md transition-colors" data-testid="link-services">
-              Services
-            </Link>
-            <Link href="/beauticians" className="text-sm font-medium text-foreground hover-elevate px-3 py-2 rounded-md transition-colors" data-testid="link-beauticians">
+            <Link href="/find-beauticians" className="text-sm font-medium text-foreground hover-elevate px-3 py-2 rounded-md transition-colors" data-testid="link-beauticians">
               Find Beauticians
             </Link>
             <Link href="/become-beautician" className="text-sm font-medium text-foreground hover-elevate px-3 py-2 rounded-md transition-colors" data-testid="link-become-beautician">
@@ -32,10 +29,10 @@ export default function Header() {
 
           <div className="hidden md:flex items-center gap-4">
             <ThemeToggle />
-            <Button variant="ghost" data-testid="button-login">
+            <Button variant="ghost" onClick={() => window.location.href = '/api/login'} data-testid="button-login">
               Sign In
             </Button>
-            <Button variant="default" data-testid="button-signup">
+            <Button variant="default" onClick={() => window.location.href = '/api/login'} data-testid="button-signup">
               Get Started
             </Button>
           </div>
@@ -57,20 +54,17 @@ export default function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t bg-background">
           <nav className="flex flex-col p-6 space-y-4">
-            <Link href="/services" className="text-base font-medium text-foreground hover-elevate px-3 py-2 rounded-md" data-testid="link-services-mobile">
-              Services
-            </Link>
-            <Link href="/beauticians" className="text-base font-medium text-foreground hover-elevate px-3 py-2 rounded-md" data-testid="link-beauticians-mobile">
+            <Link href="/find-beauticians" className="text-base font-medium text-foreground hover-elevate px-3 py-2 rounded-md" data-testid="link-beauticians-mobile" onClick={() => setMobileMenuOpen(false)}>
               Find Beauticians
             </Link>
-            <Link href="/become-beautician" className="text-base font-medium text-foreground hover-elevate px-3 py-2 rounded-md" data-testid="link-become-beautician-mobile">
+            <Link href="/become-beautician" className="text-base font-medium text-foreground hover-elevate px-3 py-2 rounded-md" data-testid="link-become-beautician-mobile" onClick={() => setMobileMenuOpen(false)}>
               Become a Beautician
             </Link>
             <div className="flex flex-col gap-3 pt-4 border-t">
-              <Button variant="ghost" className="w-full" data-testid="button-login-mobile">
+              <Button variant="ghost" className="w-full" onClick={() => window.location.href = '/api/login'} data-testid="button-login-mobile">
                 Sign In
               </Button>
-              <Button variant="default" className="w-full" data-testid="button-signup-mobile">
+              <Button variant="default" className="w-full" onClick={() => window.location.href = '/api/login'} data-testid="button-signup-mobile">
                 Get Started
               </Button>
             </div>

@@ -46,6 +46,7 @@ export default function HeroSection() {
             size="lg"
             variant="default"
             className="text-base h-12 px-8"
+            onClick={() => navigate('/find-beauticians')}
             data-testid="button-book-now"
           >
             Book Now
@@ -54,6 +55,7 @@ export default function HeroSection() {
             size="lg"
             variant="outline"
             className="text-base h-12 px-8 bg-background/20 backdrop-blur-sm border-white/30 text-white hover:bg-background/30"
+            onClick={() => navigate('/become-beautician')}
             data-testid="button-become-beautician-hero"
           >
             Become a Beautician
