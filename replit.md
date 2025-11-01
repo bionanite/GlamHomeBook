@@ -18,6 +18,11 @@ Kosmospace is a luxury beauty services marketplace platform designed for Dubai, 
   - Integer-only validation for price and duration (decimals rejected)
   - Protected routes ensuring beauticians only manage their own services
   - Production-ready with architect approval and e2e testing
+- **Find Beauticians Integration**: Successfully connected to backend API
+  - Fetches beauticians from /api/beauticians with user names via database join
+  - Shows only approved beauticians (isApproved=true)
+  - Displays loading state while fetching
+  - Fixed OIDC authentication bug where duplicate email constraint caused login failures
 
 ## User Preferences
 
