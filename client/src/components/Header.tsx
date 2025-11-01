@@ -14,7 +14,7 @@ export default function Header() {
           <Link href="/" className="flex items-center space-x-2" data-testid="link-home">
             <div className="flex flex-col">
               <span className="font-serif text-2xl font-bold text-primary leading-none">Kosmospace</span>
-              <span className="text-xs text-muted-foreground tracking-wide">Luxe Beauty</span>
+              <span className="text-xs font-medium tracking-widest uppercase bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">Luxe Beauty</span>
             </div>
           </Link>
 
