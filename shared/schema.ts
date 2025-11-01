@@ -22,7 +22,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   phone: text("phone"),
-  role: text("role"), // 'customer' or 'beautician' - set after first login
+  role: text("role"), // 'customer', 'beautician', or 'admin'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

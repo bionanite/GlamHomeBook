@@ -154,6 +154,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes - protected by isAuthenticated and admin role check
+  const isAdmin = async (req: any, res: any, next: any) => {
+    const userId = req.user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await storage.getUser(userId);
+    if (user?.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    next();
+  };
+
+  // Get all bookings (admin only)
+  app.get('/api/admin/bookings', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const bookings = await storage.getAllBookings();
+      res.json(bookings);
+    } catch (error) {
+      console.error("Error fetching all bookings:", error);
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
+  // Get pending beautician applications (admin only)
+  app.get('/api/admin/beauticians/pending', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const beauticians = await storage.getPendingBeauticians();
+      res.json(beauticians);
+    } catch (error) {
+      console.error("Error fetching pending beauticians:", error);
+      res.status(500).json({ message: "Failed to fetch pending beauticians" });
+    }
+  });
+
+  // Approve beautician (admin only)
+  app.post('/api/admin/beauticians/:id/approve', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const beautician = await storage.approveBeautician(req.params.id);
+      if (!beautician) {
+        return res.status(404).json({ message: "Beautician not found" });
+      }
+      res.json({ message: "Beautician approved", beautician });
+    } catch (error) {
+      console.error("Error approving beautician:", error);
+      res.status(500).json({ message: "Failed to approve beautician" });
+    }
+  });
+
+  // Reject beautician (admin only)
+  app.post('/api/admin/beauticians/:id/reject', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.rejectBeautician(req.params.id);
+      res.json({ message: "Beautician application rejected" });
+    } catch (error) {
+      console.error("Error rejecting beautician:", error);
+      res.status(500).json({ message: "Failed to reject beautician" });
+    }
+  });
+
+  // Update booking status (admin only)
+  app.patch('/api/admin/bookings/:id/status', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { status } = req.body;
+      if (!status) {
+        return res.status(400).json({ message: "Status is required" });
+      }
+
+      const booking = await storage.updateBookingStatus(req.params.id, status);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      res.json({ message: "Booking status updated", booking });
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      res.status(500).json({ message: "Failed to update booking status" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

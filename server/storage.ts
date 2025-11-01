@@ -32,6 +32,11 @@ export interface IStorage {
   getAllBeauticians(): Promise<Beautician[]>;
   updateBeautician(id: string, data: Partial<InsertBeautician>): Promise<Beautician | undefined>;
   
+  // Admin beautician operations
+  getPendingBeauticians(): Promise<Beautician[]>;
+  approveBeautician(id: string): Promise<Beautician | undefined>;
+  rejectBeautician(id: string): Promise<void>;
+  
   // Service operations
   createService(service: InsertService): Promise<Service>;
   getServicesByBeauticianId(beauticianId: string): Promise<Service[]>;
@@ -41,6 +46,7 @@ export interface IStorage {
   getBooking(id: string): Promise<Booking | undefined>;
   getBookingsByCustomerId(customerId: string): Promise<Booking[]>;
   getBookingsByBeauticianId(beauticianId: string): Promise<Booking[]>;
+  getAllBookings(): Promise<Booking[]>;
   updateBookingStatus(id: string, status: string): Promise<Booking | undefined>;
   
   // Review operations
@@ -125,6 +131,28 @@ export class DatabaseStorage implements IStorage {
     return beautician;
   }
 
+  // Admin beautician operations
+  async getPendingBeauticians(): Promise<Beautician[]> {
+    return await db
+      .select()
+      .from(beauticians)
+      .where(eq(beauticians.isApproved, false))
+      .orderBy(desc(beauticians.createdAt));
+  }
+
+  async approveBeautician(id: string): Promise<Beautician | undefined> {
+    const [beautician] = await db
+      .update(beauticians)
+      .set({ isApproved: true })
+      .where(eq(beauticians.id, id))
+      .returning();
+    return beautician;
+  }
+
+  async rejectBeautician(id: string): Promise<void> {
+    await db.delete(beauticians).where(eq(beauticians.id, id));
+  }
+
   // Service operations
   async createService(serviceData: InsertService): Promise<Service> {
     const [service] = await db
@@ -172,6 +200,13 @@ export class DatabaseStorage implements IStorage {
       .from(bookings)
       .where(eq(bookings.beauticianId, beauticianId))
       .orderBy(desc(bookings.scheduledDate));
+  }
+
+  async getAllBookings(): Promise<Booking[]> {
+    return await db
+      .select()
+      .from(bookings)
+      .orderBy(desc(bookings.createdAt));
   }
 
   async updateBookingStatus(id: string, status: string): Promise<Booking | undefined> {
