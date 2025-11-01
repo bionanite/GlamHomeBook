@@ -105,9 +105,7 @@ export class AnalyticsDashboardService {
       : 0;
 
     const activeCustomerIds = new Set(
-      bookings
-        .filter(b => new Date(b.scheduledDate) >= subDays(new Date(), 30))
-        .map(b => b.customerId)
+      filteredBookings.map(b => b.customerId)
     );
 
     const totalBookings = filteredBookings.length;
