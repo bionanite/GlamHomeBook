@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
@@ -89,6 +90,7 @@ const beauticians = [
 ];
 
 export default function FindBeauticians() {
+  const [location] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedService, setSelectedService] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
@@ -96,6 +98,20 @@ export default function FindBeauticians() {
   const [minRating, setMinRating] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("rating");
+
+  // Apply URL parameters on component load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const locationParam = params.get('location');
+    const serviceParam = params.get('service');
+
+    if (locationParam) {
+      setSearchQuery(locationParam);
+    }
+    if (serviceParam) {
+      setSelectedService(serviceParam);
+    }
+  }, [location]);
 
   const filteredBeauticians = beauticians
     .filter((beautician) => {
