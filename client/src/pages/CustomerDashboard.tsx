@@ -4,13 +4,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, MapPin, DollarSign, Star, MessageSquare, Sparkles } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, Clock, MapPin, DollarSign, Star, MessageSquare, Sparkles, Bell, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -23,6 +27,13 @@ export default function CustomerDashboard() {
   const [reviewText, setReviewText] = useState("");
   const [rating, setRating] = useState(5);
 
+  // WhatsApp preferences state
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [whatsappOptIn, setWhatsappOptIn] = useState(true);
+  const [receiveOffers, setReceiveOffers] = useState(true);
+  const [receiveReminders, setReceiveReminders] = useState(true);
+  const [preferredContactTime, setPreferredContactTime] = useState("morning");
+
   // Redirect if not authenticated or not a customer
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -34,6 +45,21 @@ export default function CustomerDashboard() {
   const { data: bookings = [], isLoading: loadingBookings } = useQuery<any[]>({
     queryKey: ['/api/bookings/customer'],
     enabled: isAuthenticated,
+  });
+
+  // Fetch notification preferences
+  const { data: preferences, isLoading: loadingPreferences } = useQuery<any>({
+    queryKey: ['/api/notifications/preferences'],
+    enabled: isAuthenticated,
+    onSuccess: (data) => {
+      if (data) {
+        setWhatsappNumber(data.whatsappNumber || "");
+        setWhatsappOptIn(data.whatsappOptIn ?? true);
+        setReceiveOffers(data.receiveOffers ?? true);
+        setReceiveReminders(data.receiveReminders ?? true);
+        setPreferredContactTime(data.preferredContactTime || "morning");
+      }
+    },
   });
 
   // Cancel booking mutation
@@ -68,6 +94,31 @@ export default function CustomerDashboard() {
       toast({ title: "Error", description: "Failed to submit review", variant: "destructive" });
     },
   });
+
+  // Save preferences mutation
+  const savePreferencesMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest('PUT', '/api/notifications/preferences', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/preferences'] });
+      toast({ title: "Success", description: "Notification preferences saved successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to save preferences", variant: "destructive" });
+    },
+  });
+
+  const handleSavePreferences = () => {
+    savePreferencesMutation.mutate({
+      whatsappNumber,
+      whatsappOptIn,
+      receiveOffers,
+      receiveReminders,
+      preferredContactTime,
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
@@ -140,7 +191,7 @@ export default function CustomerDashboard() {
             </Card>
           ) : (
             <Tabs defaultValue="upcoming" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="upcoming" data-testid="tab-upcoming">
                   Upcoming ({upcomingBookings.length})
                 </TabsTrigger>
@@ -149,6 +200,10 @@ export default function CustomerDashboard() {
                 </TabsTrigger>
                 <TabsTrigger value="cancelled" data-testid="tab-cancelled">
                   Cancelled ({cancelledBookings.length})
+                </TabsTrigger>
+                <TabsTrigger value="notifications" data-testid="tab-notifications">
+                  <Bell className="w-4 h-4 mr-2" />
+                  Notifications
                 </TabsTrigger>
               </TabsList>
 
@@ -358,6 +413,125 @@ export default function CustomerDashboard() {
                     </Card>
                   ))
                 )}
+              </TabsContent>
+
+              <TabsContent value="notifications" className="mt-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5 text-primary" />
+                      <CardTitle>WhatsApp Notifications</CardTitle>
+                    </div>
+                    <CardDescription>
+                      Get personalized beauty offers and service reminders via WhatsApp
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {loadingPreferences ? (
+                      <div className="flex justify-center py-8">
+                        <div className="animate-spin w-6 h-6 border-4 border-primary border-t-transparent rounded-full" />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="whatsapp-number">WhatsApp Number</Label>
+                          <Input
+                            id="whatsapp-number"
+                            type="tel"
+                            placeholder="+971 50 123 4567"
+                            value={whatsappNumber}
+                            onChange={(e) => setWhatsappNumber(e.target.value)}
+                            data-testid="input-whatsapp-number"
+                          />
+                          <p className="text-sm text-muted-foreground">
+                            Include country code (e.g., +971 for UAE)
+                          </p>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                              <Label htmlFor="whatsapp-opt-in">Enable WhatsApp Notifications</Label>
+                              <p className="text-sm text-muted-foreground">
+                                Receive messages on WhatsApp
+                              </p>
+                            </div>
+                            <Switch
+                              id="whatsapp-opt-in"
+                              checked={whatsappOptIn}
+                              onCheckedChange={setWhatsappOptIn}
+                              data-testid="switch-whatsapp-opt-in"
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                              <Label htmlFor="receive-offers">Special Offers</Label>
+                              <p className="text-sm text-muted-foreground">
+                                Get personalized discounts and exclusive deals
+                              </p>
+                            </div>
+                            <Switch
+                              id="receive-offers"
+                              checked={receiveOffers}
+                              onCheckedChange={setReceiveOffers}
+                              disabled={!whatsappOptIn}
+                              data-testid="switch-receive-offers"
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                              <Label htmlFor="receive-reminders">Service Reminders</Label>
+                              <p className="text-sm text-muted-foreground">
+                                Get reminders when it's time for your next beauty session
+                              </p>
+                            </div>
+                            <Switch
+                              id="receive-reminders"
+                              checked={receiveReminders}
+                              onCheckedChange={setReceiveReminders}
+                              disabled={!whatsappOptIn}
+                              data-testid="switch-receive-reminders"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="contact-time">Preferred Contact Time</Label>
+                          <Select
+                            value={preferredContactTime}
+                            onValueChange={setPreferredContactTime}
+                            disabled={!whatsappOptIn}
+                          >
+                            <SelectTrigger id="contact-time" data-testid="select-contact-time">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="morning">Morning (9 AM - 12 PM)</SelectItem>
+                              <SelectItem value="afternoon">Afternoon (12 PM - 5 PM)</SelectItem>
+                              <SelectItem value="evening">Evening (5 PM - 9 PM)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-sm text-muted-foreground">
+                            We'll try to send messages during your preferred time
+                          </p>
+                        </div>
+
+                        <div className="pt-4 border-t">
+                          <Button
+                            onClick={handleSavePreferences}
+                            disabled={savePreferencesMutation.isPending}
+                            className="w-full"
+                            data-testid="button-save-preferences"
+                          >
+                            {savePreferencesMutation.isPending ? "Saving..." : "Save Preferences"}
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
             </Tabs>
           )}
