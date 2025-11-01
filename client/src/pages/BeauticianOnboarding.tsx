@@ -389,15 +389,15 @@ export default function BeauticianOnboarding() {
 
           {/* Trust Indicators */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 text-center">
-            <div className="p-4">
+            <div className="p-4" data-testid="trust-indicator-simple">
               <div className="font-semibold text-lg mb-1">Simple Setup</div>
               <p className="text-sm text-muted-foreground">Just 3 easy steps to get started</p>
             </div>
-            <div className="p-4">
+            <div className="p-4" data-testid="trust-indicator-flexible">
               <div className="font-semibold text-lg mb-1">Flexible Hours</div>
               <p className="text-sm text-muted-foreground">Work on your own schedule</p>
             </div>
-            <div className="p-4">
+            <div className="p-4" data-testid="trust-indicator-premium">
               <div className="font-semibold text-lg mb-1">Premium Clients</div>
               <p className="text-sm text-muted-foreground">Serve Dubai's finest clientele</p>
             </div>
