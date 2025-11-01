@@ -220,8 +220,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/admin/bookings/:id/status', isAuthenticated, isAdmin, async (req, res) => {
     try {
       const { status } = req.body;
+      const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
+      
       if (!status) {
         return res.status(400).json({ message: "Status is required" });
+      }
+      
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
       }
 
       const booking = await storage.updateBookingStatus(req.params.id, status);

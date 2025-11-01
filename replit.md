@@ -8,10 +8,11 @@ Kosmospace is a luxury beauty services marketplace platform designed for Dubai, 
 
 - Implemented complete database schema with 6 tables (sessions, users, beauticians, services, bookings, reviews)
 - Integrated Replit Auth (OpenID Connect) for authentication with Google, GitHub, email/password support
-- Created role-based user system (customer vs beautician)
+- Created role-based user system (customer, beautician, admin)
 - Built and connected beautician onboarding flow to backend API
 - Established DatabaseStorage layer with full CRUD operations for all entities
 - Set up session management with PostgreSQL-backed sessions
+- **Admin Dashboard**: Built comprehensive admin panel at /admin with beautician approval workflow and booking management
 
 ## User Preferences
 
@@ -23,8 +24,14 @@ Preferred communication style: Simple, everyday language.
 1. **Home Page** - Luxury landing page with animated showcase, services grid, reviews carousel
 2. **Find Beauticians Page** - Search, filters (service, location, price, rating), beautician cards with responsive design
 3. **Beautician Onboarding** - 3-step wizard integrated with backend (personal info → professional details → business setup)
-4. **Authentication System** - Replit Auth integration with role-based access (customer/beautician)
+4. **Authentication System** - Replit Auth integration with role-based access (customer/beautician/admin)
 5. **Database Infrastructure** - Complete schema with all necessary tables and relationships
+6. **Admin Dashboard** - Full-featured admin panel with:
+   - Beautician application review (approve/reject pending applications)
+   - Booking management (view all bookings, update status)
+   - Protected with admin role authentication
+   - Tabbed interface for different management functions
+   - Real-time updates with optimistic UI updates
 
 ### In Progress:
 1. Beautician profile management
@@ -66,12 +73,17 @@ Preferred communication style: Simple, everyday language.
 **API Structure**: RESTful API design with routes prefixed under `/api`:
 - `/api/login`, `/api/logout`, `/api/callback` - Replit Auth endpoints
 - `/api/auth/user` - Get current authenticated user
-- `/api/auth/set-role` - Set user role (customer/beautician)
+- `/api/auth/set-role` - Set user role (customer/beautician/admin)
 - `/api/beauticians/onboard` - Beautician onboarding
 - `/api/beauticians` - Get all approved beauticians
 - `/api/beauticians/:id` - Get beautician with services
 - `/api/bookings/customer` - Get customer bookings
 - `/api/bookings/beautician` - Get beautician bookings
+- `/api/admin/beauticians/pending` - Get pending beautician applications (admin only)
+- `/api/admin/beauticians/:id/approve` - Approve beautician application (admin only)
+- `/api/admin/beauticians/:id/reject` - Reject beautician application (admin only)
+- `/api/admin/bookings` - Get all bookings (admin only)
+- `/api/admin/bookings/:id/status` - Update booking status with validation (admin only)
 
 **Data Storage**: 
 - Abstracted storage interface (`IStorage`) with DatabaseStorage implementation
@@ -90,10 +102,10 @@ Preferred communication style: Simple, everyday language.
 
 **Tables**:
 1. `sessions` - Session storage for Replit Auth
-2. `users` - User accounts with Replit Auth integration (id, email, firstName, lastName, profileImageUrl, phone, role)
+2. `users` - User accounts with Replit Auth integration (id, email, firstName, lastName, profileImageUrl, phone, role: 'customer' | 'beautician' | 'admin')
 3. `beauticians` - Beautician profiles (userId, bio, experience, startingPrice, availability, rating, reviewCount, isApproved, serviceAreas)
 4. `services` - Services offered by beauticians (beauticianId, name, price, duration)
-5. `bookings` - Customer bookings (customerId, beauticianId, serviceId, scheduledDate, location, status, amounts, stripePaymentIntentId)
+5. `bookings` - Customer bookings (customerId, beauticianId, serviceId, scheduledDate, location, status: 'pending' | 'confirmed' | 'completed' | 'cancelled', amounts, stripePaymentIntentId)
 6. `reviews` - Customer reviews (bookingId, customerId, beauticianId, rating, comment)
 
 **ORM**: Drizzle ORM configured for PostgreSQL database operations.
@@ -112,11 +124,19 @@ Preferred communication style: Simple, everyday language.
 - Users log in via `/api/login` (supports Google, GitHub, email/password)
 - Session stored in PostgreSQL with connect-pg-simple
 - User profile automatically created/updated via upsertUser
-- Role assignment (customer/beautician) happens during onboarding or explicitly via `/api/auth/set-role`
+- Role assignment (customer/beautician/admin) happens during onboarding or explicitly via `/api/auth/set-role`
 
-**Protected Routes**: isAuthenticated middleware validates sessions and refreshes tokens automatically.
+**Protected Routes**: 
+- `isAuthenticated` middleware validates sessions and refreshes tokens automatically
+- `isAdmin` middleware restricts admin endpoints to users with role='admin'
+- Admin routes include double-layer protection: isAuthenticated + isAdmin
 
 **Frontend Auth**: useAuth hook provides user data, loading state, and authentication status throughout the app.
+
+**Admin Access**: 
+- Admin dashboard at `/admin` requires admin role
+- To set a user as admin: `UPDATE users SET role = 'admin' WHERE email = 'user@example.com'`
+- Admin dashboard uses wouter navigation for client-side routing
 
 ### External Dependencies
 

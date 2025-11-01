@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import { format } from "date-fns";
 export default function AdminDashboard() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
-  const [, setLocation] = useState(window.location.href);
+  const [, setLocation] = useLocation();
 
   // Redirect if not admin
   useEffect(() => {
@@ -27,12 +28,12 @@ export default function AdminDashboard() {
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = '/';
+        setLocation('/');
       }, 1500);
     } else if (!authLoading && !isAuthenticated) {
       window.location.href = '/api/login';
     }
-  }, [user, authLoading, isAuthenticated, toast]);
+  }, [user, authLoading, isAuthenticated, toast, setLocation]);
 
   // Fetch pending beauticians
   const { data: pendingBeauticians = [], isLoading: loadingBeauticians } = useQuery<any[]>({
