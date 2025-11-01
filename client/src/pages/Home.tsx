@@ -2,8 +2,9 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import AnimatedShowcase from "@/components/AnimatedShowcase";
 import ServicesSection from "@/components/ServicesSection";
-import FeaturedBeauticians from "@/components/FeaturedBeauticians";
 import HowItWorks from "@/components/HowItWorks";
+import FeaturedBeauticians from "@/components/FeaturedBeauticians";
+import ReviewsCarousel from "@/components/ReviewsCarousel";
 import BeauticianCTA from "@/components/BeauticianCTA";
 import Footer from "@/components/Footer";
 
@@ -17,6 +18,7 @@ export default function Home() {
         <ServicesSection />
         <HowItWorks />
         <FeaturedBeauticians />
+        <ReviewsCarousel />
         <BeauticianCTA />
       </main>
       <Footer />
