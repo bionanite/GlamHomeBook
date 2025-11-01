@@ -73,12 +73,15 @@ export default function ReviewsCarousel() {
   useEffect(() => {
     const handleResize = () => {
       setReviewsPerPage(getReviewsPerPage());
-      setCurrentIndex(0);
     };
     
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [reviewsPerPage]);
 
   useEffect(() => {
     if (!isAutoPlaying) return;
@@ -91,7 +94,7 @@ export default function ReviewsCarousel() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, reviewsPerPage]);
 
   const goToPrevious = () => {
     setIsAutoPlaying(false);
@@ -137,7 +140,11 @@ export default function ReviewsCarousel() {
               {Array.from({ length: Math.ceil(reviews.length / reviewsPerPage) }).map((_, pageIndex) => (
                 <div
                   key={pageIndex}
-                  className="min-w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                  className={`min-w-full grid gap-8 ${
+                    reviewsPerPage === 1 ? 'grid-cols-1' :
+                    reviewsPerPage === 2 ? 'grid-cols-2' :
+                    'grid-cols-3'
+                  }`}
                 >
                   {reviews
                     .slice(pageIndex * reviewsPerPage, (pageIndex + 1) * reviewsPerPage)
