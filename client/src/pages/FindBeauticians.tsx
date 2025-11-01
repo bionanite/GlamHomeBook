@@ -117,25 +117,8 @@ export default function FindBeauticians() {
     }
   }, [location]);
 
-  const handleBookNow = (beauticianId: number, beauticianName: string) => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Sign In Required",
-        description: "Please sign in to book a beautician.",
-        variant: "default",
-      });
-      setTimeout(() => {
-        window.location.href = '/api/login';
-      }, 1500);
-      return;
-    }
-
-    // For now, show a coming soon message
-    // In the future, this will navigate to a booking page
-    toast({
-      title: "Booking Coming Soon",
-      description: `Booking with ${beauticianName} will be available soon! We're working on the booking flow.`,
-    });
+  const handleViewProfile = (beauticianId: number) => {
+    window.location.href = `/beauticians/${beauticianId}`;
   };
 
   const filteredBeauticians = beauticians
@@ -371,10 +354,10 @@ export default function FindBeauticians() {
                             <p className="font-semibold text-lg">AED {beautician.startingPrice}</p>
                           </div>
                           <Button 
-                            onClick={() => handleBookNow(beautician.id, beautician.name)}
-                            data-testid={`button-book-${beautician.id}`}
+                            onClick={() => handleViewProfile(beautician.id)}
+                            data-testid={`button-view-profile-${beautician.id}`}
                           >
-                            Book Now
+                            View Profile
                           </Button>
                         </div>
 
