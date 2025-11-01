@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
@@ -91,6 +93,8 @@ const beauticians = [
 
 export default function FindBeauticians() {
   const [location] = useLocation();
+  const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedService, setSelectedService] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
@@ -112,6 +116,27 @@ export default function FindBeauticians() {
       setSelectedService(serviceParam);
     }
   }, [location]);
+
+  const handleBookNow = (beauticianId: number, beauticianName: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to book a beautician.",
+        variant: "default",
+      });
+      setTimeout(() => {
+        window.location.href = '/api/login';
+      }, 1500);
+      return;
+    }
+
+    // For now, show a coming soon message
+    // In the future, this will navigate to a booking page
+    toast({
+      title: "Booking Coming Soon",
+      description: `Booking with ${beauticianName} will be available soon! We're working on the booking flow.`,
+    });
+  };
 
   const filteredBeauticians = beauticians
     .filter((beautician) => {
@@ -345,7 +370,10 @@ export default function FindBeauticians() {
                             <p className="text-sm text-muted-foreground">Starting from</p>
                             <p className="font-semibold text-lg">AED {beautician.startingPrice}</p>
                           </div>
-                          <Button data-testid={`button-book-${beautician.id}`}>
+                          <Button 
+                            onClick={() => handleBookNow(beautician.id, beautician.name)}
+                            data-testid={`button-book-${beautician.id}`}
+                          >
                             Book Now
                           </Button>
                         </div>
