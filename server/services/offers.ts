@@ -77,8 +77,9 @@ export class OfferService {
 
     const offer = await this.createOffer(offerData);
 
-    // Send WhatsApp message
-    const whatsappMessage = offerData.message + `\n\nBook now: ${process.env.REPLIT_DOMAINS?.split(',')[0]}/beauticians/${topOffer.beauticianId}?offer=${offer.id}`;
+    // Send WhatsApp message with booking link
+    const baseUrl = process.env.REPLIT_DOMAINS?.split(',')[0] || 'https://kosmospace.replit.app';
+    const whatsappMessage = offerData.message + `\n\nBook now: ${baseUrl}/beauticians/${topOffer.beauticianId}?offer=${offer.id}`;
     
     const sendResult = await whatsappService.sendMessage({
       to: prefs.whatsappNumber,

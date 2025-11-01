@@ -39,6 +39,7 @@ Preferred communication style: Simple, everyday language.
 6. **Admin Dashboard** - Full-featured admin panel with:
    - Beautician application review (approve/reject pending applications)
    - Booking management (view all bookings, update status)
+   - WhatsApp offer management (manual sending, automated trigger)
    - Protected with admin role authentication
    - Tabbed interface for different management functions
    - Real-time updates with optimistic UI updates
@@ -50,11 +51,18 @@ Preferred communication style: Simple, everyday language.
    - Strict validation: positive integers only for price/duration (decimals rejected)
    - Security: beauticians can only manage their own services
    - Production-ready validation on both frontend (Zod) and backend (Number.isInteger)
+8. **WhatsApp Offer Generation System** - Intelligent marketing automation:
+   - Dual-provider messaging (Ultramessage primary, Twilio fallback)
+   - Booking pattern analytics (favorite beauticians, service intervals, timing)
+   - Personalized discount calculation based on booking history
+   - Automated scheduler (10AM & 2PM Dubai time daily)
+   - Customer dashboard preferences management (opt-in, contact times)
+   - Admin manual offer sending and bulk automation trigger
+   - Full message tracking and delivery logging
 
 ### In Progress:
-1. Customer dashboard and booking history
-2. Complete booking flow with Stripe payment integration
-3. Review and rating system
+1. Complete booking flow with Stripe payment integration
+2. Review and rating system completion
 
 ## System Architecture
 
@@ -92,6 +100,7 @@ Preferred communication style: Simple, everyday language.
 - `/api/login`, `/api/logout`, `/api/callback` - Replit Auth endpoints
 - `/api/auth/user` - Get current authenticated user
 - `/api/auth/set-role` - Set user role (customer/beautician/admin)
+- `/api/users` - Get all customers (admin only)
 - `/api/beauticians/onboard` - Beautician onboarding
 - `/api/beauticians` - Get all approved beauticians
 - `/api/beauticians/:id` - Get beautician with services
@@ -104,6 +113,12 @@ Preferred communication style: Simple, everyday language.
 - `/api/admin/beauticians/:id/reject` - Reject beautician application (admin only)
 - `/api/admin/bookings` - Get all bookings (admin only)
 - `/api/admin/bookings/:id/status` - Update booking status with validation (admin only)
+- `/api/notifications/preferences` - GET/PUT customer WhatsApp preferences
+- `/api/offers/send` - Send personalized offer to customer (admin only)
+- `/api/offers/trigger-automated` - Trigger bulk offer generation (admin only)
+- `/api/offers/customer` - Get customer offers
+- `/api/offers/:id/click` - Track offer click
+- `/api/webhooks/ultramessage` - Ultramessage delivery status webhook
 
 **Data Storage**: 
 - Abstracted storage interface (`IStorage`) with DatabaseStorage implementation
@@ -127,6 +142,9 @@ Preferred communication style: Simple, everyday language.
 4. `services` - Services offered by beauticians (beauticianId, name, price, duration)
 5. `bookings` - Customer bookings (customerId, beauticianId, serviceId, scheduledDate, location, status: 'pending' | 'confirmed' | 'completed' | 'cancelled', amounts, stripePaymentIntentId)
 6. `reviews` - Customer reviews (bookingId, customerId, beauticianId, rating, comment)
+7. `customerPreferences` - WhatsApp notification preferences (customerId, whatsappNumber, whatsappOptIn, receiveOffers, receiveReminders, preferredContactTime)
+8. `offers` - Generated personalized offers (customerId, beauticianId, serviceId, offerType, discountPercent, prices, message, status, tracking dates)
+9. `whatsappMessages` - WhatsApp delivery tracking (offerId, customerId, phoneNumber, provider, messageType, providerMessageId, status, deliveryStatus)
 
 **ORM**: Drizzle ORM configured for PostgreSQL database operations.
 

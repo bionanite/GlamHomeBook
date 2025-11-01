@@ -19,6 +19,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Admin middleware - checks if user has admin role
+  const isAdmin = async (req: any, res: any, next: any) => {
+    const userId = req.user?.claims?.sub;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await storage.getUser(userId);
+    if (user?.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    next();
+  };
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
@@ -541,21 +556,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch reviews" });
     }
   });
-
-  // Admin routes - protected by isAuthenticated and admin role check
-  const isAdmin = async (req: any, res: any, next: any) => {
-    const userId = req.user?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const user = await storage.getUser(userId);
-    if (user?.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
-    }
-
-    next();
-  };
 
   // Get all bookings (admin only)
   app.get('/api/admin/bookings', isAuthenticated, isAdmin, async (req, res) => {

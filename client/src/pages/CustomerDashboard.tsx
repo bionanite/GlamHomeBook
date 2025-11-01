@@ -51,16 +51,18 @@ export default function CustomerDashboard() {
   const { data: preferences, isLoading: loadingPreferences } = useQuery<any>({
     queryKey: ['/api/notifications/preferences'],
     enabled: isAuthenticated,
-    onSuccess: (data) => {
-      if (data) {
-        setWhatsappNumber(data.whatsappNumber || "");
-        setWhatsappOptIn(data.whatsappOptIn ?? true);
-        setReceiveOffers(data.receiveOffers ?? true);
-        setReceiveReminders(data.receiveReminders ?? true);
-        setPreferredContactTime(data.preferredContactTime || "morning");
-      }
-    },
   });
+
+  // Update state when preferences are loaded
+  useEffect(() => {
+    if (preferences) {
+      setWhatsappNumber(preferences.whatsappNumber || "");
+      setWhatsappOptIn(preferences.whatsappOptIn ?? true);
+      setReceiveOffers(preferences.receiveOffers ?? true);
+      setReceiveReminders(preferences.receiveReminders ?? true);
+      setPreferredContactTime(preferences.preferredContactTime || "morning");
+    }
+  }, [preferences]);
 
   // Cancel booking mutation
   const cancelBookingMutation = useMutation({
