@@ -74,6 +74,55 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Customer notification preferences
+export const customerPreferences = pgTable("customer_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull().unique().references(() => users.id),
+  whatsappOptIn: boolean("whatsapp_opt_in").notNull().default(true),
+  whatsappNumber: text("whatsapp_number"),
+  preferredContactTime: text("preferred_contact_time").default('morning'), // 'morning', 'afternoon', 'evening'
+  receiveOffers: boolean("receive_offers").notNull().default(true),
+  receiveReminders: boolean("receive_reminders").notNull().default(true),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Automated offers sent to customers
+export const offers = pgTable("offers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerId: varchar("customer_id").notNull().references(() => users.id),
+  beauticianId: varchar("beautician_id").notNull().references(() => beauticians.id),
+  serviceId: varchar("service_id").notNull().references(() => services.id),
+  offerType: text("offer_type").notNull(), // 'interval_reminder', 'loyalty_discount', 'comeback'
+  discountPercent: integer("discount_percent").default(0),
+  originalPrice: integer("original_price").notNull(),
+  discountedPrice: integer("discounted_price").notNull(),
+  message: text("message").notNull(),
+  status: text("status").notNull().default('pending'), // 'pending', 'sent', 'delivered', 'read', 'clicked', 'booked', 'expired'
+  sentAt: timestamp("sent_at"),
+  expiresAt: timestamp("expires_at").notNull(),
+  clickedAt: timestamp("clicked_at"),
+  bookedAt: timestamp("booked_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// WhatsApp message log
+export const whatsappMessages = pgTable("whatsapp_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  offerId: varchar("offer_id").references(() => offers.id),
+  customerId: varchar("customer_id").notNull().references(() => users.id),
+  phoneNumber: text("phone_number").notNull(),
+  provider: text("provider").notNull(), // 'ultramessage', 'twilio'
+  messageType: text("message_type").notNull(), // 'offer', 'reminder', 'confirmation'
+  messageBody: text("message_body").notNull(),
+  status: text("status").notNull().default('pending'), // 'pending', 'sent', 'delivered', 'failed', 'read'
+  providerMessageId: text("provider_message_id"),
+  errorMessage: text("error_message"),
+  sentAt: timestamp("sent_at"),
+  deliveredAt: timestamp("delivered_at"),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Insert Schemas
 export const insertBeauticianSchema = createInsertSchema(beauticians).omit({
   id: true,
@@ -103,6 +152,29 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
   createdAt: true,
 });
 
+export const insertCustomerPreferencesSchema = createInsertSchema(customerPreferences).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertOfferSchema = createInsertSchema(offers).omit({
+  id: true,
+  status: true,
+  sentAt: true,
+  clickedAt: true,
+  bookedAt: true,
+  createdAt: true,
+});
+
+export const insertWhatsappMessageSchema = createInsertSchema(whatsappMessages).omit({
+  id: true,
+  status: true,
+  sentAt: true,
+  deliveredAt: true,
+  readAt: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -118,3 +190,12 @@ export type Booking = typeof bookings.$inferSelect;
 
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type Review = typeof reviews.$inferSelect;
+
+export type InsertCustomerPreferences = z.infer<typeof insertCustomerPreferencesSchema>;
+export type CustomerPreferences = typeof customerPreferences.$inferSelect;
+
+export type InsertOffer = z.infer<typeof insertOfferSchema>;
+export type Offer = typeof offers.$inferSelect;
+
+export type InsertWhatsappMessage = z.infer<typeof insertWhatsappMessageSchema>;
+export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
