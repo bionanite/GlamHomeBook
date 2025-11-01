@@ -12,7 +12,10 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center space-x-2" data-testid="link-home">
-            <span className="font-serif text-2xl font-bold text-primary">Luxe Beauty</span>
+            <div className="flex flex-col">
+              <span className="font-serif text-2xl font-bold text-primary leading-none">Kosmospace</span>
+              <span className="text-xs text-muted-foreground tracking-wide">Luxe Beauty</span>
+            </div>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">

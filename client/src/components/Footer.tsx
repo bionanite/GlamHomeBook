@@ -7,9 +7,12 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           <div>
-            <h3 className="font-serif text-2xl font-bold text-primary mb-4">
-              Luxe Beauty
-            </h3>
+            <div className="mb-4">
+              <h3 className="font-serif text-2xl font-bold text-primary leading-none mb-1">
+                Kosmospace
+              </h3>
+              <p className="text-sm text-muted-foreground italic">Luxe Beauty</p>
+            </div>
             <p className="text-sm text-muted-foreground mb-4">
               Dubai's premier platform for luxury home beauty services.
             </p>
@@ -109,7 +112,7 @@ export default function Footer() {
         </div>
 
         <div className="pt-8 border-t text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Luxe Beauty Dubai. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Kosmospace. All rights reserved.</p>
         </div>
       </div>
     </footer>
