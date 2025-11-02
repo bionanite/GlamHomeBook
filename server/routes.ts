@@ -11,12 +11,21 @@ import { OfferService } from "./services/offers";
 import { triggerManualOfferGeneration } from "./scheduler";
 import { AnalyticsDashboardService } from "./services/analytics-dashboard";
 import { subDays, startOfDay, endOfDay } from "date-fns";
+import rateLimit from 'express-rate-limit';
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-10-29.clover",
+});
+
+const adminLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per window
+  message: 'Too many login attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -144,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Admin Login Routes
-  app.post('/api/admin/login', (req, res, next) => {
+  app.post('/api/admin/login', adminLoginLimiter, (req, res, next) => {
     passport.authenticate('local', (err: any, user: any, info: any) => {
       if (err) {
         console.error("Admin login error:", err);
@@ -152,6 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!user) {
+        console.log('[SECURITY] Admin login failed:', { email: req.body.username, timestamp: new Date(), ip: req.ip });
         return res.status(401).json({ message: info?.message || "Invalid credentials" });
       }
 
@@ -167,6 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.status(500).json({ message: "Failed to save session" });
           }
 
+          console.log('[SECURITY] Admin login successful:', { email: user.email, timestamp: new Date(), ip: req.ip });
           res.json({
             id: user.id,
             email: user.email,
