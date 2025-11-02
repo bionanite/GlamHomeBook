@@ -606,6 +606,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get platform settings (admin only)
+  app.get('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getPlatformSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching platform settings:", error);
+      res.status(500).json({ message: "Failed to fetch platform settings" });
+    }
+  });
+
+  // Update platform settings (admin only)
+  app.put('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { globalCommissionPercentage } = req.body;
+      
+      if (globalCommissionPercentage === undefined || globalCommissionPercentage === null) {
+        return res.status(400).json({ message: "globalCommissionPercentage is required" });
+      }
+      
+      if (typeof globalCommissionPercentage !== 'number' || globalCommissionPercentage < 0 || globalCommissionPercentage > 100) {
+        return res.status(400).json({ message: "Commission percentage must be a number between 0 and 100" });
+      }
+      
+      const settings = await storage.updatePlatformSettings({ globalCommissionPercentage });
+      res.json({ message: "Platform settings updated", settings });
+    } catch (error) {
+      console.error("Error updating platform settings:", error);
+      res.status(500).json({ message: "Failed to update platform settings" });
+    }
+  });
+
+  // Update beautician commission (admin only)
+  app.patch('/api/admin/beauticians/:id/commission', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { commissionPercentage } = req.body;
+      
+      // Validate commission percentage if provided
+      if (commissionPercentage !== null && commissionPercentage !== undefined) {
+        if (typeof commissionPercentage !== 'number' || commissionPercentage < 0 || commissionPercentage > 100) {
+          return res.status(400).json({ message: "Commission percentage must be a number between 0 and 100" });
+        }
+      }
+      
+      const beautician = await storage.updateBeauticianCommission(req.params.id, commissionPercentage);
+      
+      if (!beautician) {
+        return res.status(404).json({ message: "Beautician not found" });
+      }
+      
+      res.json({ 
+        message: commissionPercentage === null ? "Using global commission rate" : "Custom commission rate set", 
+        beautician 
+      });
+    } catch (error) {
+      console.error("Error updating beautician commission:", error);
+      res.status(500).json({ message: "Failed to update beautician commission" });
+    }
+  });
+
   // Update booking status (admin only)
   app.patch('/api/admin/bookings/:id/status', isAuthenticated, isAdmin, async (req, res) => {
     try {
