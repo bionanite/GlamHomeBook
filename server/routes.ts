@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAdminAuth } from "./adminAuth";
+import passport from "passport";
 import { insertBeauticianSchema, insertServiceSchema, insertBookingSchema, insertReviewSchema, insertCustomerPreferencesSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import Stripe from "stripe";
@@ -124,6 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Auth middleware
   await setupAuth(app);
+  setupAdminAuth(app);
 
   // Admin middleware - checks if user has admin role
   const isAdmin = async (req: any, res: any, next: any) => {
@@ -139,6 +142,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     next();
   };
+
+  // Admin Login Routes
+  app.post('/api/admin/login', (req, res, next) => {
+    passport.authenticate('local', (err: any, user: any, info: any) => {
+      if (err) {
+        console.error("Admin login error:", err);
+        return res.status(500).json({ message: "Internal server error" });
+      }
+      
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      }
+
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error("Session creation error:", err);
+          return res.status(500).json({ message: "Failed to create session" });
+        }
+
+        req.session.save((err) => {
+          if (err) {
+            console.error("Session save error:", err);
+            return res.status(500).json({ message: "Failed to save session" });
+          }
+
+          res.json({
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            role: user.role,
+          });
+        });
+      });
+    })(req, res, next);
+  });
+
+  app.post('/api/admin/logout', (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Failed to logout" });
+      }
+
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Session destroy error:", err);
+          return res.status(500).json({ message: "Failed to destroy session" });
+        }
+
+        res.json({ message: "Logged out successfully" });
+      });
+    });
+  });
+
+  app.get('/api/admin/check', (req, res) => {
+    if (req.isAuthenticated() && (req.user as any)?.role === 'admin') {
+      const user = req.user as any;
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+      });
+    } else {
+      res.status(401).json({ message: "Not authenticated" });
+    }
+  });
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {

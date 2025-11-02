@@ -23,6 +23,7 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   phone: text("phone"),
   role: text("role"), // 'customer', 'beautician', or 'admin'
+  passwordHash: text("password_hash"), // Optional - for admin local auth
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
@@ -20,7 +19,6 @@ import { format } from "date-fns";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export default function AdminDashboard() {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [selectedCustomer, setSelectedCustomer] = useState("");
@@ -28,33 +26,57 @@ export default function AdminDashboard() {
   const [globalCommission, setGlobalCommission] = useState<number>(50);
   const [editingCommission, setEditingCommission] = useState<{ beauticianId: string; currentRate: number | null } | null>(null);
   const [commissionInput, setCommissionInput] = useState<string>("");
+  const [adminUser, setAdminUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  // Redirect if not admin
+  // Check admin authentication
   useEffect(() => {
-    if (!authLoading && isAuthenticated && (user as any)?.role !== 'admin') {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to access the admin dashboard.",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        setLocation('/');
-      }, 1500);
-    } else if (!authLoading && !isAuthenticated) {
-      window.location.href = '/api/login';
-    }
-  }, [user, authLoading, isAuthenticated, toast, setLocation]);
+    const checkAdminAuth = async () => {
+      try {
+        const response = await fetch('/api/admin/check', {
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          setLocation('/admin/login');
+          return;
+        }
+
+        const data = await response.json();
+        if (data.role !== 'admin') {
+          toast({
+            title: "Access Denied",
+            description: "You don't have permission to access the admin dashboard.",
+            variant: "destructive",
+          });
+          setTimeout(() => {
+            setLocation('/admin/login');
+          }, 1500);
+          return;
+        }
+
+        setAdminUser(data);
+      } catch (error) {
+        console.error('Admin auth check failed:', error);
+        setLocation('/admin/login');
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+
+    checkAdminAuth();
+  }, [toast, setLocation]);
 
   // Fetch pending beauticians
   const { data: pendingBeauticians = [], isLoading: loadingBeauticians } = useQuery<any[]>({
     queryKey: ['/api/admin/beauticians/pending'],
-    enabled: isAuthenticated && (user as any)?.role === 'admin',
+    enabled: !authLoading && adminUser?.role === 'admin',
   });
 
   // Fetch all bookings
   const { data: bookings = [], isLoading: loadingBookings } = useQuery<any[]>({
     queryKey: ['/api/admin/bookings'],
-    enabled: isAuthenticated && (user as any)?.role === 'admin',
+    enabled: !authLoading && adminUser?.role === 'admin',
   });
 
   // Approve beautician mutation
@@ -119,7 +141,7 @@ export default function AdminDashboard() {
   // Fetch all customers
   const { data: customers = [] } = useQuery<any[]>({
     queryKey: ['/api/users'],
-    enabled: isAuthenticated && (user as any)?.role === 'admin',
+    enabled: !authLoading && adminUser?.role === 'admin',
   });
 
   // Send offer to customer mutation
@@ -165,7 +187,7 @@ export default function AdminDashboard() {
   // Fetch platform settings
   const { data: platformSettings } = useQuery<{ globalCommissionPercentage: number }>({
     queryKey: ['/api/admin/settings'],
-    enabled: isAuthenticated && (user as any)?.role === 'admin',
+    enabled: !authLoading && adminUser?.role === 'admin',
   });
 
   // Update state when platform settings are fetched
@@ -224,7 +246,7 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error('Failed to fetch overview metrics');
       return res.json();
     },
-    enabled: isAuthenticated && (user as any)?.role === 'admin',
+    enabled: !authLoading && adminUser?.role === 'admin',
   });
 
   const { data: customerMetrics, isLoading: loadingCustomers } = useQuery({
@@ -236,7 +258,7 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error('Failed to fetch customer metrics');
       return res.json();
     },
-    enabled: isAuthenticated && (user as any)?.role === 'admin',
+    enabled: !authLoading && adminUser?.role === 'admin',
   });
 
   const { data: beauticianMetrics, isLoading: loadingBeauticianMetrics } = useQuery({
@@ -248,7 +270,7 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error('Failed to fetch beautician metrics');
       return res.json();
     },
-    enabled: isAuthenticated && (user as any)?.role === 'admin',
+    enabled: !authLoading && adminUser?.role === 'admin',
   });
 
   const { data: retentionMetrics, isLoading: loadingRetention } = useQuery({
@@ -260,10 +282,10 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error('Failed to fetch retention metrics');
       return res.json();
     },
-    enabled: isAuthenticated && (user as any)?.role === 'admin',
+    enabled: !authLoading && adminUser?.role === 'admin',
   });
 
-  if (authLoading || !isAuthenticated || (user as any)?.role !== 'admin') {
+  if (authLoading || !adminUser || adminUser?.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

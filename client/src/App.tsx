@@ -8,6 +8,7 @@ import FindBeauticians from "@/pages/FindBeauticians";
 import BeauticianOnboarding from "@/pages/BeauticianOnboarding";
 import BeauticianDashboard from "@/pages/BeauticianDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminLogin from "@/pages/AdminLogin";
 import CustomerDashboard from "@/pages/CustomerDashboard";
 import BeauticianProfile from "@/pages/BeauticianProfile";
 import BridalMakeup from "@/pages/BridalMakeup";
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/beautician/dashboard" component={BeauticianDashboard} />
       <Route path="/customer/dashboard" component={CustomerDashboard} />
       <Route path="/beauticians/:id" component={BeauticianProfile} />
+      <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/services/bridal-makeup" component={BridalMakeup} />
       <Route path="/services/manicure" component={ManicureServices} />
