@@ -7,6 +7,7 @@ import {
   customerPreferences,
   offers,
   whatsappMessages,
+  platformSettings,
   type User,
   type UpsertUser,
   type Beautician,
@@ -23,6 +24,8 @@ import {
   type InsertOffer,
   type WhatsappMessage,
   type InsertWhatsappMessage,
+  type PlatformSettings,
+  type InsertPlatformSettings,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc } from "drizzle-orm";
@@ -89,6 +92,11 @@ export interface IStorage {
   // WhatsApp message operations
   createWhatsappMessage(message: InsertWhatsappMessage): Promise<WhatsappMessage>;
   getWhatsappMessagesByCustomerId(customerId: string): Promise<WhatsappMessage[]>;
+  
+  // Platform settings operations
+  getPlatformSettings(): Promise<PlatformSettings>;
+  updatePlatformSettings(data: Partial<InsertPlatformSettings>): Promise<PlatformSettings>;
+  updateBeauticianCommission(beauticianId: string, commissionPercentage: number | null): Promise<Beautician | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -480,6 +488,49 @@ export class DatabaseStorage implements IStorage {
       .from(whatsappMessages)
       .where(eq(whatsappMessages.customerId, customerId))
       .orderBy(desc(whatsappMessages.createdAt));
+  }
+
+  // Platform settings operations
+  async getPlatformSettings(): Promise<PlatformSettings> {
+    const [settings] = await db
+      .select()
+      .from(platformSettings)
+      .where(eq(platformSettings.id, 'default'));
+    
+    // If no settings exist, create default with 50% commission
+    if (!settings) {
+      const [newSettings] = await db
+        .insert(platformSettings)
+        .values({ id: 'default', globalCommissionPercentage: 50 })
+        .returning();
+      return newSettings;
+    }
+    
+    return settings;
+  }
+
+  async updatePlatformSettings(data: Partial<InsertPlatformSettings>): Promise<PlatformSettings> {
+    const [settings] = await db
+      .update(platformSettings)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(platformSettings.id, 'default'))
+      .returning();
+    
+    if (!settings) {
+      throw new Error('Platform settings not found');
+    }
+    
+    return settings;
+  }
+
+  async updateBeauticianCommission(beauticianId: string, commissionPercentage: number | null): Promise<Beautician | undefined> {
+    const [beautician] = await db
+      .update(beauticians)
+      .set({ commissionPercentage })
+      .where(eq(beauticians.id, beauticianId))
+      .returning();
+    
+    return beautician;
   }
 }
 
