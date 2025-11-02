@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
+import { Link } from "wouter";
 
 interface ServiceCardProps {
   image: string;
@@ -9,11 +10,12 @@ interface ServiceCardProps {
   priceRange: string;
   rating: number;
   reviewCount: number;
+  link?: string;
 }
 
-export default function ServiceCard({ image, title, description, priceRange, rating, reviewCount }: ServiceCardProps) {
+export default function ServiceCard({ image, title, description, priceRange, rating, reviewCount, link }: ServiceCardProps) {
   return (
-    <Card className="overflow-hidden hover-elevate transition-all duration-300 group">
+    <Card className="overflow-hidden hover-elevate active-elevate-2 transition-all duration-300 group cursor-pointer">
       <div className="aspect-[4/3] overflow-hidden">
         <img
           src={image}
@@ -43,9 +45,19 @@ export default function ServiceCard({ image, title, description, priceRange, rat
           <span className="font-semibold text-lg" data-testid={`text-price-range`}>
             {priceRange}
           </span>
-          <Button data-testid={`button-book-service`}>
-            Book Now
-          </Button>
+          {link ? (
+            <Link href={link}>
+              <Button data-testid={`button-book-service`}>
+                Learn More
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/find-beauticians">
+              <Button data-testid={`button-book-service`}>
+                Book Now
+              </Button>
+            </Link>
+          )}
         </div>
       </CardContent>
     </Card>
