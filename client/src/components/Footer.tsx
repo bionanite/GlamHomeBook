@@ -50,6 +50,21 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/blog" className="text-muted-foreground hover-elevate px-2 py-1 rounded-md inline-block" data-testid="link-blog-footer">
+                  Blog
+                </Link>
+              </li>
+              <li>
+                <Link href="/customer/dashboard" className="text-muted-foreground hover-elevate px-2 py-1 rounded-md inline-block" data-testid="link-dashboard-footer">
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link href="/admin" className="text-muted-foreground hover-elevate px-2 py-1 rounded-md inline-block" data-testid="link-admin-footer">
+                  Admin
+                </Link>
+              </li>
+              <li>
                 <button onClick={() => window.location.href = '/api/login'} className="text-muted-foreground hover-elevate px-2 py-1 rounded-md inline-block">
                   Sign In
                 </button>
