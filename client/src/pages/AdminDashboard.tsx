@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Calendar, CheckCircle, XCircle, Clock, User, MapPin, DollarSign, MessageCircle, Send, TrendingUp, TrendingDown, Users, Activity, Award, Settings } from "lucide-react";
 import { format } from "date-fns";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -25,6 +26,8 @@ export default function AdminDashboard() {
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [analyticsDateRange, setAnalyticsDateRange] = useState("30");
   const [globalCommission, setGlobalCommission] = useState<number>(50);
+  const [editingCommission, setEditingCommission] = useState<{ beauticianId: string; currentRate: number | null } | null>(null);
+  const [commissionInput, setCommissionInput] = useState<string>("");
 
   // Redirect if not admin
   useEffect(() => {
@@ -184,6 +187,30 @@ export default function AdminDashboard() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update settings", variant: "destructive" });
+    },
+  });
+
+  // Update beautician commission mutation
+  const updateBeauticianCommissionMutation = useMutation({
+    mutationFn: async ({ beauticianId, commissionPercentage }: { beauticianId: string; commissionPercentage: number | null }) => {
+      const res = await apiRequest('PATCH', `/api/admin/beauticians/${beauticianId}/commission`, { commissionPercentage });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/beauticians/pending'] });
+      toast({ 
+        title: "Success", 
+        description: editingCommission?.currentRate === null && commissionInput 
+          ? "Custom commission rate set successfully"
+          : commissionInput 
+          ? "Commission rate updated successfully" 
+          : "Using global commission rate"
+      });
+      setEditingCommission(null);
+      setCommissionInput("");
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update commission", variant: "destructive" });
     },
   });
 
@@ -758,6 +785,118 @@ export default function AdminDashboard() {
                           <p className="text-sm">{beautician.bio}</p>
                         </div>
                       )}
+
+                      {/* Commission Settings */}
+                      <div className="bg-muted/50 rounded-md p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold mb-1">Commission Rate</p>
+                            <p className="text-sm text-muted-foreground">
+                              {beautician.commissionPercentage !== null ? (
+                                <>Custom: {beautician.commissionPercentage}%</>
+                              ) : (
+                                <>Using global rate: {globalCommission}%</>
+                              )}
+                            </p>
+                          </div>
+                          <Dialog 
+                            open={editingCommission?.beauticianId === beautician.id} 
+                            onOpenChange={(open) => {
+                              if (!open) {
+                                setEditingCommission(null);
+                                setCommissionInput("");
+                              }
+                            }}
+                          >
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setEditingCommission({
+                                    beauticianId: beautician.id,
+                                    currentRate: beautician.commissionPercentage,
+                                  });
+                                  setCommissionInput(beautician.commissionPercentage?.toString() || "");
+                                }}
+                                data-testid={`button-edit-commission-${beautician.id}`}
+                              >
+                                <Settings className="h-3 w-3 mr-2" />
+                                Edit
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Set Commission Rate</DialogTitle>
+                                <DialogDescription>
+                                  Set a custom commission rate for this beautician. Leave empty to use the global rate ({globalCommission}%).
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 pt-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="commission-input">Commission Percentage (0-100)</Label>
+                                  <div className="relative">
+                                    <Input
+                                      id="commission-input"
+                                      type="number"
+                                      min="0"
+                                      max="100"
+                                      step="1"
+                                      value={commissionInput}
+                                      onChange={(e) => setCommissionInput(e.target.value)}
+                                      placeholder={`Leave empty for global rate (${globalCommission}%)`}
+                                      className="pr-12"
+                                      data-testid="input-commission"
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                      %
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex gap-3">
+                                  <Button
+                                    onClick={() => {
+                                      const value = commissionInput.trim() === "" 
+                                        ? null 
+                                        : parseFloat(commissionInput);
+                                      
+                                      if (value !== null && (value < 0 || value > 100)) {
+                                        toast({
+                                          title: "Invalid Value",
+                                          description: "Commission must be between 0 and 100",
+                                          variant: "destructive",
+                                        });
+                                        return;
+                                      }
+                                      
+                                      updateBeauticianCommissionMutation.mutate({
+                                        beauticianId: beautician.id,
+                                        commissionPercentage: value,
+                                      });
+                                    }}
+                                    disabled={updateBeauticianCommissionMutation.isPending}
+                                    className="flex-1"
+                                    data-testid="button-save-beautician-commission"
+                                  >
+                                    {updateBeauticianCommissionMutation.isPending ? "Saving..." : "Save"}
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      setEditingCommission(null);
+                                      setCommissionInput("");
+                                    }}
+                                    disabled={updateBeauticianCommissionMutation.isPending}
+                                    data-testid="button-cancel-commission"
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </div>
 
                       <div className="flex gap-3 pt-4 border-t">
                         <Button
