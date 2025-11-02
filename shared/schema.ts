@@ -38,6 +38,7 @@ export const beauticians = pgTable("beauticians", {
   reviewCount: integer("review_count").notNull().default(0),
   isApproved: boolean("is_approved").notNull().default(false),
   serviceAreas: text("service_areas").array().notNull(), // ['Dubai Marina', 'Jumeirah', ...]
+  commissionPercentage: integer("commission_percentage"), // Optional override, if null uses global commission
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -123,6 +124,13 @@ export const whatsappMessages = pgTable("whatsapp_messages", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Platform settings for global configurations
+export const platformSettings = pgTable("platform_settings", {
+  id: varchar("id").primaryKey().default('default'), // Single row configuration
+  globalCommissionPercentage: integer("global_commission_percentage").notNull().default(50),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Insert Schemas
 export const insertBeauticianSchema = createInsertSchema(beauticians).omit({
   id: true,
@@ -175,6 +183,11 @@ export const insertWhatsappMessageSchema = createInsertSchema(whatsappMessages).
   createdAt: true,
 });
 
+export const insertPlatformSettingsSchema = createInsertSchema(platformSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -199,3 +212,6 @@ export type Offer = typeof offers.$inferSelect;
 
 export type InsertWhatsappMessage = z.infer<typeof insertWhatsappMessageSchema>;
 export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
+
+export type InsertPlatformSettings = z.infer<typeof insertPlatformSettingsSchema>;
+export type PlatformSettings = typeof platformSettings.$inferSelect;
