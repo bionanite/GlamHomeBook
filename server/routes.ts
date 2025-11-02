@@ -138,18 +138,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAdminAuth(app);
 
   // Admin middleware - checks if user has admin role
+  // Supports both OIDC admin users and local admin users
   const isAdmin = async (req: any, res: any, next: any) => {
-    const userId = req.user?.claims?.sub;
-    if (!userId) {
+    if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const user = await storage.getUser(userId);
-    if (user?.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
+    const user = req.user;
+    
+    // Check if local admin user (logged in via email/password)
+    if (user?.isLocalAdmin && user?.role === 'admin') {
+      return next();
     }
 
-    next();
+    // Check if OIDC admin user (logged in via Replit Auth)
+    const userId = user?.claims?.sub;
+    if (userId) {
+      const dbUser = await storage.getUser(userId);
+      if (dbUser?.role === 'admin') {
+        return next();
+      }
+    }
+
+    return res.status(403).json({ message: "Admin access required" });
   };
 
   // Admin Login Routes
@@ -209,18 +220,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get('/api/admin/check', (req, res) => {
-    if (req.isAuthenticated() && (req.user as any)?.role === 'admin') {
-      const user = req.user as any;
-      res.json({
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const user = req.user as any;
+    
+    // Check if user is a local admin (logged in via email/password)
+    if (user?.isLocalAdmin && user?.role === 'admin') {
+      return res.json({
         id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        isLocalAdmin: true,
       });
-    } else {
-      res.status(401).json({ message: "Not authenticated" });
     }
+
+    // If not a local admin, return unauthorized
+    res.status(401).json({ message: "Not authenticated" });
   });
 
   // Auth routes
@@ -250,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all users (admin only) - for offer sending
-  app.get('/api/users', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/users', isAdmin, async (req, res) => {
     try {
       const allCustomers = await storage.getAllCustomers();
       res.json(allCustomers);
@@ -751,7 +770,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all bookings (admin only)
-  app.get('/api/admin/bookings', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/admin/bookings', isAdmin, async (req, res) => {
     try {
       const bookings = await storage.getAllBookings();
       res.json(bookings);
@@ -762,7 +781,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get pending beautician applications (admin only)
-  app.get('/api/admin/beauticians/pending', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/admin/beauticians/pending', isAdmin, async (req, res) => {
     try {
       const beauticians = await storage.getPendingBeauticians();
       res.json(beauticians);
@@ -773,7 +792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Approve beautician (admin only)
-  app.post('/api/admin/beauticians/:id/approve', isAuthenticated, isAdmin, async (req, res) => {
+  app.post('/api/admin/beauticians/:id/approve', isAdmin, async (req, res) => {
     try {
       const beautician = await storage.approveBeautician(req.params.id);
       if (!beautician) {
@@ -787,7 +806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Reject beautician (admin only)
-  app.post('/api/admin/beauticians/:id/reject', isAuthenticated, isAdmin, async (req, res) => {
+  app.post('/api/admin/beauticians/:id/reject', isAdmin, async (req, res) => {
     try {
       await storage.rejectBeautician(req.params.id);
       res.json({ message: "Beautician application rejected" });
@@ -798,7 +817,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get platform settings (admin only)
-  app.get('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/admin/settings', isAdmin, async (req, res) => {
     try {
       const settings = await storage.getPlatformSettings();
       res.json(settings);
@@ -809,7 +828,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update platform settings (admin only)
-  app.put('/api/admin/settings', isAuthenticated, isAdmin, async (req, res) => {
+  app.put('/api/admin/settings', isAdmin, async (req, res) => {
     try {
       const { globalCommissionPercentage } = req.body;
       
@@ -830,7 +849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update beautician commission (admin only)
-  app.patch('/api/admin/beauticians/:id/commission', isAuthenticated, isAdmin, async (req, res) => {
+  app.patch('/api/admin/beauticians/:id/commission', isAdmin, async (req, res) => {
     try {
       const { commissionPercentage } = req.body;
       
@@ -858,7 +877,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update booking status (admin only)
-  app.patch('/api/admin/bookings/:id/status', isAuthenticated, isAdmin, async (req, res) => {
+  app.patch('/api/admin/bookings/:id/status', isAdmin, async (req, res) => {
     try {
       const { status } = req.body;
       const validStatuses = ['pending', 'confirmed', 'completed', 'cancelled'];
@@ -951,7 +970,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Send personalized offer to a customer (admin only)
-  app.post('/api/offers/send', isAuthenticated, isAdmin, async (req, res) => {
+  app.post('/api/offers/send', isAdmin, async (req, res) => {
     try {
       const { customerId } = req.body;
       
@@ -974,7 +993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Trigger manual offer generation for all eligible customers (admin only)
-  app.post('/api/offers/trigger-automated', isAuthenticated, isAdmin, async (req, res) => {
+  app.post('/api/offers/trigger-automated', isAdmin, async (req, res) => {
     try {
       const result = await triggerManualOfferGeneration();
       res.json({
@@ -1023,7 +1042,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   // Get overview metrics
-  app.get('/api/admin/analytics/overview', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get('/api/admin/analytics/overview', isAdmin, async (req: any, res) => {
     try {
       const dateRange = getDateRange(req);
       const metrics = await analyticsService.getOverviewMetrics(dateRange);
@@ -1035,7 +1054,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get customer analytics
-  app.get('/api/admin/analytics/customers', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get('/api/admin/analytics/customers', isAdmin, async (req: any, res) => {
     try {
       const dateRange = getDateRange(req);
       const metrics = await analyticsService.getCustomerMetrics(dateRange);
@@ -1047,7 +1066,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get beautician analytics
-  app.get('/api/admin/analytics/beauticians', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get('/api/admin/analytics/beauticians', isAdmin, async (req: any, res) => {
     try {
       const dateRange = getDateRange(req);
       const metrics = await analyticsService.getBeauticianMetrics(dateRange);
@@ -1059,7 +1078,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get retention analytics
-  app.get('/api/admin/analytics/retention', isAuthenticated, isAdmin, async (req: any, res) => {
+  app.get('/api/admin/analytics/retention', isAdmin, async (req: any, res) => {
     try {
       const dateRange = getDateRange(req);
       const metrics = await analyticsService.getRetentionMetrics(dateRange);

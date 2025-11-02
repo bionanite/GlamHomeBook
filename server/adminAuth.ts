@@ -39,7 +39,8 @@ export function setupAdminAuth(app: Express) {
           }
 
           console.log(`Admin login successful: ${email}`);
-          return done(null, user);
+          // Mark as local admin user
+          return done(null, { ...user, isLocalAdmin: true });
         } catch (error) {
           console.error("Error during admin authentication:", error);
           return done(error);
@@ -48,21 +49,9 @@ export function setupAdminAuth(app: Express) {
     )
   );
 
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: string, done) => {
-    try {
-      const user = await storage.getUser(id);
-      done(null, user);
-    } catch (error) {
-      done(error);
-    }
-  });
-
-  app.use(passport.initialize());
-  app.use(passport.session());
+  // Note: Do NOT override passport.serializeUser/deserializeUser here
+  // They are already set up in replitAuth.ts and will handle both OIDC and local users
+  // Also do NOT call app.use(passport.initialize()) or app.use(passport.session()) again
 }
 
 export async function hashPassword(password: string): Promise<string> {
