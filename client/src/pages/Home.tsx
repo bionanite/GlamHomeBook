@@ -5,6 +5,7 @@ import ServicesSection from "@/components/ServicesSection";
 import HowItWorks from "@/components/HowItWorks";
 import FeaturedBeauticians from "@/components/FeaturedBeauticians";
 import ReviewsCarousel from "@/components/ReviewsCarousel";
+import FAQ from "@/components/FAQ";
 import BeauticianCTA from "@/components/BeauticianCTA";
 import Footer from "@/components/Footer";
 
@@ -19,6 +20,7 @@ export default function Home() {
         <HowItWorks />
         <FeaturedBeauticians />
         <ReviewsCarousel />
+        <FAQ />
         <BeauticianCTA />
       </main>
       <Footer />
