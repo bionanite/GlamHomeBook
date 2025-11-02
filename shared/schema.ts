@@ -124,6 +124,23 @@ export const whatsappMessages = pgTable("whatsapp_messages", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Blog posts for content marketing and SEO
+export const blogPosts = pgTable("blog_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  slug: varchar("slug").unique().notNull(),
+  excerpt: text("excerpt").notNull(),
+  content: text("content").notNull(),
+  coverImage: text("cover_image"),
+  author: varchar("author").default('Kosmospace Team'),
+  category: text("category").notNull(), // 'guides', 'tips', 'trends', 'beauty-101'
+  tags: text("tags").array().default([]),
+  isPublished: boolean("is_published").notNull().default(true),
+  readTime: integer("read_time").notNull(), // estimated minutes to read
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Platform settings for global configurations
 export const platformSettings = pgTable("platform_settings", {
   id: varchar("id").primaryKey().default('default'), // Single row configuration
@@ -183,6 +200,12 @@ export const insertWhatsappMessageSchema = createInsertSchema(whatsappMessages).
   createdAt: true,
 });
 
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertPlatformSettingsSchema = createInsertSchema(platformSettings).omit({
   id: true,
   updatedAt: true,
@@ -212,6 +235,9 @@ export type Offer = typeof offers.$inferSelect;
 
 export type InsertWhatsappMessage = z.infer<typeof insertWhatsappMessageSchema>;
 export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
+
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+export type BlogPost = typeof blogPosts.$inferSelect;
 
 export type InsertPlatformSettings = z.infer<typeof insertPlatformSettingsSchema>;
 export type PlatformSettings = typeof platformSettings.$inferSelect;

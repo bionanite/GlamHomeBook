@@ -8,6 +8,7 @@ import {
   offers,
   whatsappMessages,
   platformSettings,
+  blogPosts,
   type User,
   type UpsertUser,
   type Beautician,
@@ -26,6 +27,8 @@ import {
   type InsertWhatsappMessage,
   type PlatformSettings,
   type InsertPlatformSettings,
+  type BlogPost,
+  type InsertBlogPost,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc } from "drizzle-orm";
@@ -97,6 +100,11 @@ export interface IStorage {
   getPlatformSettings(): Promise<PlatformSettings>;
   updatePlatformSettings(data: Partial<InsertPlatformSettings>): Promise<PlatformSettings>;
   updateBeauticianCommission(beauticianId: string, commissionPercentage: number | null): Promise<Beautician | undefined>;
+  
+  // Blog operations
+  getAllBlogPosts(): Promise<BlogPost[]>;
+  getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
+  createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -531,6 +539,31 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return beautician;
+  }
+
+  // Blog operations
+  async getAllBlogPosts(): Promise<BlogPost[]> {
+    return await db
+      .select()
+      .from(blogPosts)
+      .where(eq(blogPosts.isPublished, true))
+      .orderBy(desc(blogPosts.createdAt));
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+    const [post] = await db
+      .select()
+      .from(blogPosts)
+      .where(and(eq(blogPosts.slug, slug), eq(blogPosts.isPublished, true)));
+    return post;
+  }
+
+  async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
+    const [newPost] = await db
+      .insert(blogPosts)
+      .values(post)
+      .returning();
+    return newPost;
   }
 }
 

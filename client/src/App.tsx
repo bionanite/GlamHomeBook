@@ -10,6 +10,12 @@ import BeauticianDashboard from "@/pages/BeauticianDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import CustomerDashboard from "@/pages/CustomerDashboard";
 import BeauticianProfile from "@/pages/BeauticianProfile";
+import BridalMakeup from "@/pages/BridalMakeup";
+import ManicureServices from "@/pages/ManicureServices";
+import PedicureServices from "@/pages/PedicureServices";
+import LashExtensions from "@/pages/LashExtensions";
+import Blog from "@/pages/Blog";
+import BlogPost from "@/pages/BlogPost";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +28,12 @@ function Router() {
       <Route path="/customer/dashboard" component={CustomerDashboard} />
       <Route path="/beauticians/:id" component={BeauticianProfile} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/services/bridal-makeup" component={BridalMakeup} />
+      <Route path="/services/manicure" component={ManicureServices} />
+      <Route path="/services/pedicure" component={PedicureServices} />
+      <Route path="/services/lash-extensions" component={LashExtensions} />
+      <Route path="/blog" component={Blog} />
+      <Route path="/blog/:slug" component={BlogPost} />
       <Route component={NotFound} />
     </Switch>
   );
