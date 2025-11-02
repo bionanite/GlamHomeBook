@@ -12,7 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, CheckCircle, XCircle, Clock, User, MapPin, DollarSign, MessageCircle, Send, TrendingUp, TrendingDown, Users, Activity, Award } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar, CheckCircle, XCircle, Clock, User, MapPin, DollarSign, MessageCircle, Send, TrendingUp, TrendingDown, Users, Activity, Award, Settings } from "lucide-react";
 import { format } from "date-fns";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
@@ -22,6 +24,7 @@ export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [analyticsDateRange, setAnalyticsDateRange] = useState("30");
+  const [globalCommission, setGlobalCommission] = useState<number>(50);
 
   // Redirect if not admin
   useEffect(() => {
@@ -156,6 +159,34 @@ export default function AdminDashboard() {
     },
   });
 
+  // Fetch platform settings
+  const { data: platformSettings } = useQuery({
+    queryKey: ['/api/admin/settings'],
+    enabled: isAuthenticated && (user as any)?.role === 'admin',
+  });
+
+  // Update state when platform settings are fetched
+  useEffect(() => {
+    if (platformSettings?.globalCommissionPercentage !== undefined) {
+      setGlobalCommission(platformSettings.globalCommissionPercentage);
+    }
+  }, [platformSettings]);
+
+  // Update platform settings mutation
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (globalCommissionPercentage: number) => {
+      const res = await apiRequest('PUT', '/api/admin/settings', { globalCommissionPercentage });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
+      toast({ title: "Success", description: "Global commission rate updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update settings", variant: "destructive" });
+    },
+  });
+
   // Analytics queries
   const { data: overviewMetrics, isLoading: loadingOverview } = useQuery({
     queryKey: ['/api/admin/analytics/overview', analyticsDateRange],
@@ -231,7 +262,7 @@ export default function AdminDashboard() {
 
           {/* Tabs */}
           <Tabs defaultValue="beauticians" className="space-y-6">
-            <TabsList className="grid w-full max-w-3xl grid-cols-4">
+            <TabsList className="grid w-full max-w-3xl grid-cols-5">
               <TabsTrigger value="analytics" data-testid="tab-analytics">
                 Analytics
               </TabsTrigger>
@@ -244,6 +275,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="notifications" data-testid="tab-notifications">
                 <MessageCircle className="w-4 h-4 mr-2" />
                 WhatsApp
+              </TabsTrigger>
+              <TabsTrigger value="settings" data-testid="tab-settings">
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
               </TabsTrigger>
             </TabsList>
 
@@ -927,6 +962,104 @@ export default function AdminDashboard() {
                     <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
                       <li>10:00 AM Dubai time (daily offers)</li>
                       <li>2:00 PM Dubai time (afternoon reminders)</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Settings Tab */}
+            <TabsContent value="settings" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Platform Settings</CardTitle>
+                  <CardDescription>
+                    Configure global platform commission rates and other settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Global Commission Rate */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="global-commission" className="text-base font-semibold">
+                        Global Commission Rate
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Default commission percentage applied to all beauticians unless they have a custom rate set.
+                        This is the percentage of each booking that Kosmospace keeps as platform commission.
+                      </p>
+                    </div>
+
+                    <div className="flex items-end gap-4">
+                      <div className="flex-1 max-w-xs">
+                        <Label htmlFor="global-commission" className="text-sm mb-2 block">
+                          Commission Percentage
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="global-commission"
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="1"
+                            value={globalCommission}
+                            onChange={(e) => setGlobalCommission(parseFloat(e.target.value) || 0)}
+                            className="pr-12"
+                            data-testid="input-global-commission"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                            %
+                          </span>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={() => {
+                          if (globalCommission >= 0 && globalCommission <= 100) {
+                            updateSettingsMutation.mutate(globalCommission);
+                          } else {
+                            toast({
+                              title: "Invalid Value",
+                              description: "Commission must be between 0 and 100",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        disabled={updateSettingsMutation.isPending}
+                        data-testid="button-save-commission"
+                      >
+                        {updateSettingsMutation.isPending ? "Saving..." : "Save Changes"}
+                      </Button>
+                    </div>
+
+                    {/* Commission Preview */}
+                    <div className="bg-muted/50 rounded-md p-4 space-y-2">
+                      <h4 className="font-semibold text-sm">Commission Preview</h4>
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Booking Amount</p>
+                          <p className="font-semibold">AED 1,000</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Platform Commission ({globalCommission}%)</p>
+                          <p className="font-semibold text-primary">AED {((1000 * globalCommission) / 100).toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Beautician Earnings</p>
+                          <p className="font-semibold">AED {(1000 - (1000 * globalCommission) / 100).toFixed(2)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Info Section */}
+                  <div className="border-t pt-4 space-y-2">
+                    <h4 className="font-semibold text-sm">How Commission Works</h4>
+                    <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                      <li>Global commission applies to all beauticians by default</li>
+                      <li>Individual beauticians can have custom commission rates set in the Applications tab</li>
+                      <li>Custom rates override the global commission for specific beauticians</li>
+                      <li>Changes take effect immediately for new bookings</li>
                     </ul>
                   </div>
                 </CardContent>
