@@ -18,6 +18,110 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Stripe webhook - must be BEFORE body parsing middleware
+  // Stripe needs raw body for signature verification
+  app.post('/api/stripe/webhook', async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    
+    if (!sig) {
+      return res.status(400).send('No signature provided');
+    }
+
+    let event: Stripe.Event;
+
+    try {
+      // Verify webhook signature
+      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+      if (!webhookSecret) {
+        throw new Error('STRIPE_WEBHOOK_SECRET is required');
+      }
+      
+      event = stripe.webhooks.constructEvent(
+        req.rawBody as Buffer,
+        sig,
+        webhookSecret
+      );
+    } catch (err: any) {
+      console.error('Webhook signature verification failed:', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    try {
+      switch (event.type) {
+        case 'payment_intent.succeeded': {
+          const paymentIntent = event.data.object as Stripe.PaymentIntent;
+          console.log('Payment succeeded:', paymentIntent.id);
+
+          // Extract booking ID from metadata
+          const bookingId = paymentIntent.metadata?.bookingId;
+          if (bookingId) {
+            // Idempotency check: don't update if already confirmed or cancelled
+            const currentBooking = await storage.getBooking(bookingId);
+            if (currentBooking?.status === 'confirmed' || currentBooking?.status === 'cancelled' || currentBooking?.status === 'completed') {
+              console.log(`Booking ${bookingId} already in final state: ${currentBooking.status}. Skipping update.`);
+              break;
+            }
+            
+            // Update booking status to confirmed
+            await storage.updateBookingStatus(bookingId, 'confirmed');
+            console.log(`Booking ${bookingId} confirmed via payment ${paymentIntent.id}`);
+          } else {
+            console.warn('No bookingId in payment intent metadata:', paymentIntent.id);
+          }
+          break;
+        }
+
+        case 'payment_intent.payment_failed': {
+          const paymentIntent = event.data.object as Stripe.PaymentIntent;
+          console.log('Payment failed:', paymentIntent.id);
+
+          // Extract booking ID and mark as cancelled
+          const bookingId = paymentIntent.metadata?.bookingId;
+          if (bookingId) {
+            // Idempotency check: don't update if already in final state
+            const currentBooking = await storage.getBooking(bookingId);
+            if (currentBooking?.status === 'confirmed' || currentBooking?.status === 'cancelled' || currentBooking?.status === 'completed') {
+              console.log(`Booking ${bookingId} already in final state: ${currentBooking.status}. Skipping update.`);
+              break;
+            }
+            
+            await storage.updateBookingStatus(bookingId, 'cancelled');
+            console.log(`Booking ${bookingId} cancelled due to payment failure`);
+          }
+          break;
+        }
+
+        case 'payment_intent.canceled': {
+          const paymentIntent = event.data.object as Stripe.PaymentIntent;
+          console.log('Payment cancelled:', paymentIntent.id);
+
+          const bookingId = paymentIntent.metadata?.bookingId;
+          if (bookingId) {
+            // Idempotency check: don't update if already in final state
+            const currentBooking = await storage.getBooking(bookingId);
+            if (currentBooking?.status === 'confirmed' || currentBooking?.status === 'cancelled' || currentBooking?.status === 'completed') {
+              console.log(`Booking ${bookingId} already in final state: ${currentBooking.status}. Skipping update.`);
+              break;
+            }
+            
+            await storage.updateBookingStatus(bookingId, 'cancelled');
+            console.log(`Booking ${bookingId} cancelled`);
+          }
+          break;
+        }
+
+        default:
+          console.log(`Unhandled event type: ${event.type}`);
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Error handling webhook event:', error);
+      res.status(500).json({ message: 'Webhook handler error' });
+    }
+  });
+
   // Auth middleware
   await setupAuth(app);
 
@@ -366,18 +470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const platformFee = Math.round(totalAmount * 0.1);
       const beauticianEarnings = totalAmount - platformFee;
 
-      // Create Stripe payment intent
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: totalAmount * 100, // Convert AED to fils (cents)
-        currency: "aed",
-        metadata: {
-          customerId: userId,
-          beauticianId,
-          serviceId,
-        },
-      });
-
-      // Create booking
+      // Create booking first to get booking ID
       const booking = await storage.createBooking({
         customerId: userId,
         beauticianId,
@@ -388,11 +481,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalAmount,
         platformFee,
         beauticianEarnings,
-        stripePaymentIntentId: paymentIntent.id,
+        stripePaymentIntentId: '', // Will update after creating payment intent
       });
 
+      // Create Stripe payment intent with booking ID in metadata
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: totalAmount * 100, // Convert AED to fils (cents)
+        currency: "aed",
+        metadata: {
+          bookingId: booking.id.toString(),
+          customerId: userId,
+          beauticianId,
+          serviceId,
+        },
+      });
+
+      // Update booking with payment intent ID  
+      await storage.updateBookingPaymentIntent(booking.id, paymentIntent.id);
+
       res.status(201).json({
-        booking,
+        booking: { ...booking, stripePaymentIntentId: paymentIntent.id },
         clientSecret: paymentIntent.client_secret,
       });
     } catch (error) {
