@@ -163,7 +163,7 @@ export default function AdminDashboard() {
   });
 
   // Fetch platform settings
-  const { data: platformSettings } = useQuery({
+  const { data: platformSettings } = useQuery<{ globalCommissionPercentage: number }>({
     queryKey: ['/api/admin/settings'],
     enabled: isAuthenticated && (user as any)?.role === 'admin',
   });
