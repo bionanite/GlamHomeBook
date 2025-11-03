@@ -1,7 +1,17 @@
 import { Link } from "wouter";
 import { SiFacebook, SiInstagram, SiX, SiLinkedin } from "react-icons/si";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Footer() {
+  const { data: socialMedia } = useQuery<{
+    facebookUrl: string;
+    instagramUrl: string;
+    twitterUrl: string;
+    linkedinUrl: string;
+  }>({
+    queryKey: ['/api/settings/social-media'],
+  });
+
   return (
     <footer className="bg-card border-t">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
@@ -21,16 +31,16 @@ export default function Footer() {
               Dubai's premier platform for luxury home beauty services.
             </p>
             <div className="flex gap-4">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover-elevate p-2 rounded-md" data-testid="link-facebook">
+              <a href={socialMedia?.facebookUrl || "https://facebook.com"} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover-elevate p-2 rounded-md" data-testid="link-facebook">
                 <SiFacebook className="h-5 w-5" />
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover-elevate p-2 rounded-md" data-testid="link-instagram">
+              <a href={socialMedia?.instagramUrl || "https://instagram.com"} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover-elevate p-2 rounded-md" data-testid="link-instagram">
                 <SiInstagram className="h-5 w-5" />
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover-elevate p-2 rounded-md" data-testid="link-twitter">
+              <a href={socialMedia?.twitterUrl || "https://twitter.com"} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover-elevate p-2 rounded-md" data-testid="link-twitter">
                 <SiX className="h-5 w-5" />
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover-elevate p-2 rounded-md" data-testid="link-linkedin">
+              <a href={socialMedia?.linkedinUrl || "https://linkedin.com"} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover-elevate p-2 rounded-md" data-testid="link-linkedin">
                 <SiLinkedin className="h-5 w-5" />
               </a>
             </div>

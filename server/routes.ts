@@ -830,21 +830,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update platform settings (admin only)
   app.put('/api/admin/settings', isAdmin, async (req, res) => {
     try {
-      const { globalCommissionPercentage } = req.body;
+      const { globalCommissionPercentage, facebookUrl, instagramUrl, twitterUrl, linkedinUrl } = req.body;
       
-      if (globalCommissionPercentage === undefined || globalCommissionPercentage === null) {
-        return res.status(400).json({ message: "globalCommissionPercentage is required" });
+      const updates: any = {};
+      
+      // Validate and add commission percentage if provided
+      if (globalCommissionPercentage !== undefined && globalCommissionPercentage !== null) {
+        if (typeof globalCommissionPercentage !== 'number' || globalCommissionPercentage < 0 || globalCommissionPercentage > 100) {
+          return res.status(400).json({ message: "Commission percentage must be a number between 0 and 100" });
+        }
+        updates.globalCommissionPercentage = globalCommissionPercentage;
       }
       
-      if (typeof globalCommissionPercentage !== 'number' || globalCommissionPercentage < 0 || globalCommissionPercentage > 100) {
-        return res.status(400).json({ message: "Commission percentage must be a number between 0 and 100" });
-      }
+      // Add social media URLs if provided
+      if (facebookUrl !== undefined) updates.facebookUrl = facebookUrl;
+      if (instagramUrl !== undefined) updates.instagramUrl = instagramUrl;
+      if (twitterUrl !== undefined) updates.twitterUrl = twitterUrl;
+      if (linkedinUrl !== undefined) updates.linkedinUrl = linkedinUrl;
       
-      const settings = await storage.updatePlatformSettings({ globalCommissionPercentage });
+      const settings = await storage.updatePlatformSettings(updates);
       res.json({ message: "Platform settings updated", settings });
     } catch (error) {
       console.error("Error updating platform settings:", error);
       res.status(500).json({ message: "Failed to update platform settings" });
+    }
+  });
+
+  // Get social media URLs (public endpoint for footer)
+  app.get('/api/settings/social-media', async (req, res) => {
+    try {
+      const settings = await storage.getPlatformSettings();
+      res.json({
+        facebookUrl: settings.facebookUrl,
+        instagramUrl: settings.instagramUrl,
+        twitterUrl: settings.twitterUrl,
+        linkedinUrl: settings.linkedinUrl,
+      });
+    } catch (error) {
+      console.error("Error fetching social media URLs:", error);
+      res.status(500).json({ message: "Failed to fetch social media URLs" });
     }
   });
 

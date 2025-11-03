@@ -146,6 +146,10 @@ export const blogPosts = pgTable("blog_posts", {
 export const platformSettings = pgTable("platform_settings", {
   id: varchar("id").primaryKey().default('default'), // Single row configuration
   globalCommissionPercentage: integer("global_commission_percentage").notNull().default(50),
+  facebookUrl: text("facebook_url").default('https://facebook.com'),
+  instagramUrl: text("instagram_url").default('https://instagram.com'),
+  twitterUrl: text("twitter_url").default('https://twitter.com'),
+  linkedinUrl: text("linkedin_url").default('https://linkedin.com'),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

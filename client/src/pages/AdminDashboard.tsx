@@ -28,6 +28,10 @@ export default function AdminDashboard() {
   const [commissionInput, setCommissionInput] = useState<string>("");
   const [adminUser, setAdminUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
 
   // Check admin authentication
   useEffect(() => {
@@ -185,15 +189,27 @@ export default function AdminDashboard() {
   });
 
   // Fetch platform settings
-  const { data: platformSettings } = useQuery<{ globalCommissionPercentage: number }>({
+  const { data: platformSettings } = useQuery<{ 
+    globalCommissionPercentage: number;
+    facebookUrl?: string;
+    instagramUrl?: string;
+    twitterUrl?: string;
+    linkedinUrl?: string;
+  }>({
     queryKey: ['/api/admin/settings'],
     enabled: !authLoading && adminUser?.role === 'admin',
   });
 
   // Update state when platform settings are fetched
   useEffect(() => {
-    if (platformSettings?.globalCommissionPercentage !== undefined) {
-      setGlobalCommission(platformSettings.globalCommissionPercentage);
+    if (platformSettings) {
+      if (platformSettings.globalCommissionPercentage !== undefined) {
+        setGlobalCommission(platformSettings.globalCommissionPercentage);
+      }
+      if (platformSettings.facebookUrl) setFacebookUrl(platformSettings.facebookUrl);
+      if (platformSettings.instagramUrl) setInstagramUrl(platformSettings.instagramUrl);
+      if (platformSettings.twitterUrl) setTwitterUrl(platformSettings.twitterUrl);
+      if (platformSettings.linkedinUrl) setLinkedinUrl(platformSettings.linkedinUrl);
     }
   }, [platformSettings]);
 
@@ -209,6 +225,22 @@ export default function AdminDashboard() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to update settings", variant: "destructive" });
+    },
+  });
+
+  // Update social media URLs mutation
+  const updateSocialMediaMutation = useMutation({
+    mutationFn: async (urls: { facebookUrl?: string; instagramUrl?: string; twitterUrl?: string; linkedinUrl?: string }) => {
+      const res = await apiRequest('PUT', '/api/admin/settings', urls);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/settings/social-media'] });
+      toast({ title: "Success", description: "Social media URLs updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update social media URLs", variant: "destructive" });
     },
   });
 
@@ -1222,6 +1254,82 @@ export default function AdminDashboard() {
                       <li>Custom rates override the global commission for specific beauticians</li>
                       <li>Changes take effect immediately for new bookings</li>
                     </ul>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Social Media Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Social Media Links</CardTitle>
+                  <CardDescription>
+                    Manage social media URLs displayed in the website footer
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="facebook-url">Facebook URL</Label>
+                      <Input
+                        id="facebook-url"
+                        type="url"
+                        placeholder="https://facebook.com/kosmospace"
+                        value={facebookUrl}
+                        onChange={(e) => setFacebookUrl(e.target.value)}
+                        data-testid="input-facebook-url"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="instagram-url">Instagram URL</Label>
+                      <Input
+                        id="instagram-url"
+                        type="url"
+                        placeholder="https://instagram.com/kosmospace"
+                        value={instagramUrl}
+                        onChange={(e) => setInstagramUrl(e.target.value)}
+                        data-testid="input-instagram-url"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="twitter-url">Twitter (X) URL</Label>
+                      <Input
+                        id="twitter-url"
+                        type="url"
+                        placeholder="https://twitter.com/kosmospace"
+                        value={twitterUrl}
+                        onChange={(e) => setTwitterUrl(e.target.value)}
+                        data-testid="input-twitter-url"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="linkedin-url">LinkedIn URL</Label>
+                      <Input
+                        id="linkedin-url"
+                        type="url"
+                        placeholder="https://linkedin.com/company/kosmospace"
+                        value={linkedinUrl}
+                        onChange={(e) => setLinkedinUrl(e.target.value)}
+                        data-testid="input-linkedin-url"
+                      />
+                    </div>
+
+                    <Button
+                      onClick={() => {
+                        updateSocialMediaMutation.mutate({
+                          facebookUrl,
+                          instagramUrl,
+                          twitterUrl,
+                          linkedinUrl,
+                        });
+                      }}
+                      disabled={updateSocialMediaMutation.isPending}
+                      data-testid="button-save-social-media"
+                    >
+                      {updateSocialMediaMutation.isPending ? "Saving..." : "Save Social Media Links"}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

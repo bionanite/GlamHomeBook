@@ -3,13 +3,18 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Search, MapPin, Check, ChevronsUpDown } from "lucide-react";
 import heroImage from "@assets/generated_images/Hero_makeup_service_Dubai_2d4fb52b.png";
+import { DUBAI_AREAS } from "@shared/dubaiAreas";
+import { cn } from "@/lib/utils";
 
 export default function HeroSection() {
   const [, navigate] = useLocation();
   const [location, setLocation] = useState("");
   const [service, setService] = useState("");
+  const [openLocationCombobox, setOpenLocationCombobox] = useState(false);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -65,15 +70,52 @@ export default function HeroSection() {
         <div className="bg-background/95 backdrop-blur-md rounded-2xl p-4 sm:p-6 shadow-2xl max-w-3xl mx-auto">
           <div className="flex flex-col md:flex-row gap-3 md:gap-4">
             <div className="flex-1 relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-              <Input
-                placeholder="Dubai location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-10 h-11 md:h-12"
-                data-testid="input-location"
-              />
+              <Popover open={openLocationCombobox} onOpenChange={setOpenLocationCombobox}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openLocationCombobox}
+                    className="w-full justify-start h-11 md:h-12 pl-10 font-normal"
+                    data-testid="button-select-location-hero"
+                  >
+                    <MapPin className="absolute left-3 h-5 w-5 text-muted-foreground" />
+                    {location || "Dubai location"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Search Dubai areas..." 
+                      data-testid="input-search-location-hero"
+                    />
+                    <CommandList>
+                      <CommandEmpty>No area found.</CommandEmpty>
+                      <CommandGroup>
+                        {DUBAI_AREAS.map((area) => (
+                          <CommandItem
+                            key={area}
+                            value={area}
+                            onSelect={(currentValue) => {
+                              setLocation(currentValue === location ? "" : currentValue);
+                              setOpenLocationCombobox(false);
+                            }}
+                            data-testid={`option-location-hero-${area.toLowerCase().replace(/\s+/g, '-')}`}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                location === area ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {area}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="flex-1">
               <Select value={service} onValueChange={setService}>
