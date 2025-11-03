@@ -83,7 +83,7 @@ export default function HeroSection() {
                     {location || "Dubai location"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
+                <PopoverContent className="w-full p-0" align="start" side="top">
                   <Command>
                     <CommandInput 
                       placeholder="Search Dubai areas..." 
