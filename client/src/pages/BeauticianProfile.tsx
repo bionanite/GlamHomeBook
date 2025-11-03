@@ -12,7 +12,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Clock, MapPin, Star, DollarSign, Sparkles, ArrowLeft } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Calendar as CalendarIcon, Clock, MapPin, Star, DollarSign, Sparkles, ArrowLeft, Check, ChevronsUpDown } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -23,6 +24,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { DUBAI_AREAS } from "@shared/dubaiAreas";
+import { cn } from "@/lib/utils";
 
 if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
   throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
@@ -104,6 +107,7 @@ export default function BeauticianProfile() {
   const [selectedService, setSelectedService] = useState<any>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [bookingStep, setBookingStep] = useState<'details' | 'payment'>('details');
+  const [openLocationCombobox, setOpenLocationCombobox] = useState(false);
 
   // Fetch beautician profile with services
   const { data: beautician, isLoading } = useQuery<any>({
@@ -428,15 +432,56 @@ export default function BeauticianProfile() {
                   control={form.control}
                   name="location"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel>Your Location</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Enter your full address"
-                          data-testid="input-location"
-                        />
-                      </FormControl>
+                      <Popover open={openLocationCombobox} onOpenChange={setOpenLocationCombobox}>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={openLocationCombobox}
+                              className="w-full justify-between"
+                              data-testid="button-select-location"
+                            >
+                              {field.value || "Select your area in Dubai"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0" align="start">
+                          <Command>
+                            <CommandInput 
+                              placeholder="Search Dubai areas..." 
+                              data-testid="input-search-location"
+                            />
+                            <CommandList>
+                              <CommandEmpty>No area found.</CommandEmpty>
+                              <CommandGroup>
+                                {DUBAI_AREAS.map((area) => (
+                                  <CommandItem
+                                    key={area}
+                                    value={area}
+                                    onSelect={(currentValue) => {
+                                      field.onChange(currentValue === field.value ? "" : currentValue);
+                                      setOpenLocationCombobox(false);
+                                    }}
+                                    data-testid={`option-location-${area.toLowerCase().replace(/\s+/g, '-')}`}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        field.value === area ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    {area}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
