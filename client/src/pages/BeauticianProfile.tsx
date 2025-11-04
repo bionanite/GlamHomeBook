@@ -48,6 +48,13 @@ const bookingSchema = z.object({
 
 type BookingFormData = z.infer<typeof bookingSchema>;
 
+const reviewSchema = z.object({
+  rating: z.number().min(1, "Please select a rating").max(5),
+  comment: z.string().min(10, "Review must be at least 10 characters"),
+});
+
+type ReviewFormData = z.infer<typeof reviewSchema>;
+
 function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -115,6 +122,8 @@ export default function BeauticianProfile() {
   const [bookingStep, setBookingStep] = useState<'details' | 'payment'>('details');
   const [openLocationCombobox, setOpenLocationCombobox] = useState(false);
   const [openDatePicker, setOpenDatePicker] = useState(false);
+  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+  const [hoveredRating, setHoveredRating] = useState(0);
 
   // Helper to get consistent image index from beautician ID
   const getImageIndex = (id: string | undefined) => {
@@ -145,6 +154,14 @@ export default function BeauticianProfile() {
     },
   });
 
+  const reviewForm = useForm<ReviewFormData>({
+    resolver: zodResolver(reviewSchema),
+    defaultValues: {
+      rating: 0,
+      comment: "",
+    },
+  });
+
   // Create booking mutation
   const createBookingMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -159,6 +176,30 @@ export default function BeauticianProfile() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to create booking", variant: "destructive" });
+    },
+  });
+
+  // Create review mutation
+  const createReviewMutation = useMutation({
+    mutationFn: async (data: ReviewFormData) => {
+      const res = await apiRequest('POST', `/api/beauticians/${beauticianId}/reviews`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Review Submitted",
+        description: "Thank you for your feedback!",
+      });
+      setIsReviewDialogOpen(false);
+      reviewForm.reset();
+      queryClient.invalidateQueries({ queryKey: ['/api/beauticians', beauticianId, 'reviews'] });
+    },
+    onError: () => {
+      toast({ 
+        title: "Error", 
+        description: "Failed to submit review. Please try again.", 
+        variant: "destructive" 
+      });
     },
   });
 
@@ -207,6 +248,25 @@ export default function BeauticianProfile() {
     setSelectedService(service);
     form.setValue('serviceId', service.id);
     setIsBookingDialogOpen(true);
+  };
+
+  const openReviewDialog = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to leave a review.",
+        variant: "default",
+      });
+      setTimeout(() => {
+        window.location.href = '/api/login';
+      }, 1500);
+      return;
+    }
+    setIsReviewDialogOpen(true);
+  };
+
+  const onSubmitReview = (data: ReviewFormData) => {
+    createReviewMutation.mutate(data);
   };
 
   if (isLoading) {
@@ -329,9 +389,18 @@ export default function BeauticianProfile() {
           </div>
 
           {/* Reviews */}
-          {reviews.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-serif font-bold mb-6">Customer Reviews</h2>
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <h2 className="text-2xl font-serif font-bold">Customer Reviews</h2>
+              <Button 
+                onClick={openReviewDialog}
+                data-testid="button-leave-review"
+              >
+                Leave a Review
+              </Button>
+            </div>
+            
+            {reviews.length > 0 ? (
               <div className="space-y-4">
                 {reviews.map((review: any) => (
                   <Card key={review.id}>
@@ -359,8 +428,14 @@ export default function BeauticianProfile() {
                   </Card>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">No reviews yet. Be the first to review!</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </main>
 
@@ -549,6 +624,84 @@ export default function BeauticianProfile() {
               <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Review Dialog */}
+      <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Leave a Review</DialogTitle>
+          </DialogHeader>
+
+          <Form {...reviewForm}>
+            <form onSubmit={reviewForm.handleSubmit(onSubmitReview)} className="space-y-6">
+              <FormField
+                control={reviewForm.control}
+                name="rating"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rating</FormLabel>
+                    <FormControl>
+                      <div className="flex gap-2">
+                        {Array.from({ length: 5 }).map((_, i) => {
+                          const starValue = i + 1;
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => field.onChange(starValue)}
+                              onMouseEnter={() => setHoveredRating(starValue)}
+                              onMouseLeave={() => setHoveredRating(0)}
+                              className="transition-transform hover:scale-110"
+                              data-testid={`input-rating-${starValue}`}
+                            >
+                              <Star
+                                className={`w-8 h-8 ${
+                                  starValue <= (hoveredRating || field.value)
+                                    ? "fill-primary text-primary"
+                                    : "text-muted-foreground"
+                                }`}
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={reviewForm.control}
+                name="comment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Your Review</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Share your experience with this beautician..."
+                        rows={4}
+                        data-testid="textarea-review-comment"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={createReviewMutation.isPending}
+                data-testid="button-submit-review"
+              >
+                {createReviewMutation.isPending ? "Submitting..." : "Submit Review"}
+              </Button>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
