@@ -4,6 +4,17 @@
 
 Kosmospace is a luxury beauty services marketplace for Dubai, connecting clients with premium beauticians for in-home services like manicures, pedicures, lash extensions, and makeup. The platform aims for a luxurious, minimalist design and seeks to be a leading premium service marketplace in the beauty industry. Key capabilities include a comprehensive booking system, beautician onboarding, role-based access, and advanced analytics.
 
+## Recent Updates
+
+### November 4, 2025
+- **Location Autocomplete Enhancement**: Added location autocomplete dropdown to homepage hero section using shadcn Combobox component with 70+ Dubai areas. Dropdown opens upward for better UX.
+- **Social Media URL Management**: 
+  - Extended `platformSettings` schema with Facebook, Instagram, Twitter, LinkedIn URL fields
+  - Created public API endpoint `/api/settings/social-media` for footer consumption
+  - Added Social Media Links section in Admin Dashboard Settings tab
+  - Updated Footer component to dynamically fetch and display social media URLs from database
+- **Beautician Availability Display Fix**: Fixed beautician cards on Find Beauticians page to display user-friendly availability text (e.g., "Available 7 days a week", "Available: Mon, Tue, Wed") instead of raw JSON format.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

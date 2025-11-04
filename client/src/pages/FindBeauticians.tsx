@@ -69,6 +69,34 @@ export default function FindBeauticians() {
     window.location.href = `/beauticians/${beauticianId}`;
   };
 
+  // Helper function to format availability
+  const formatAvailability = (availabilityJson: string): string => {
+    try {
+      const availability = JSON.parse(availabilityJson);
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const dayAbbreviations = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      
+      const availableDays = days.filter(day => availability[day] === true);
+      
+      if (availableDays.length === 0) {
+        return "Availability not set";
+      }
+      
+      if (availableDays.length === 7) {
+        return "Available 7 days a week";
+      }
+      
+      const availableDayNames = availableDays.map(day => {
+        const index = days.indexOf(day);
+        return dayAbbreviations[index];
+      });
+      
+      return `Available: ${availableDayNames.join(', ')}`;
+    } catch (error) {
+      return "Availability not set";
+    }
+  };
+
   // Map API data to display format
   const beauticians = (beauticiansData || []).map((b, index) => ({
     id: b.id,
@@ -330,7 +358,7 @@ export default function FindBeauticians() {
                             </div>
 
                             <p className="text-sm text-primary mt-3" data-testid={`text-availability-${beautician.id}`}>
-                              {beautician.availability}
+                              {formatAvailability(beautician.availability)}
                             </p>
                           </CardContent>
                         </Card>
