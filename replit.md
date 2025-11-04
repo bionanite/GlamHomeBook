@@ -14,6 +14,7 @@ Kosmospace is a luxury beauty services marketplace for Dubai, connecting clients
   - Added Social Media Links section in Admin Dashboard Settings tab
   - Updated Footer component to dynamically fetch and display social media URLs from database
 - **Beautician Availability Display Fix**: Fixed beautician cards on Find Beauticians page to display user-friendly availability text (e.g., "Available 7 days a week", "Available: Mon, Tue, Wed") instead of raw JSON format.
+- **Beautician Profile Avatar**: Added large beautician profile photo to the profile page header section using Avatar component (96px mobile, 128px desktop) positioned on the left side.
 
 ## User Preferences
 

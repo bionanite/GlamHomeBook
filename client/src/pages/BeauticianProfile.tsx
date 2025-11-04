@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { DUBAI_AREAS } from "@shared/dubaiAreas";
 import { cn } from "@/lib/utils";
+import profile1 from "@assets/generated_images/Beautician_profile_one_9fa3b2a4.png";
+import profile2 from "@assets/generated_images/Beautician_profile_two_08398f98.png";
+import profile3 from "@assets/generated_images/Beautician_profile_three_da0a3188.png";
+
+const profileImages = [profile1, profile2, profile3];
 
 if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
   throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
@@ -241,27 +247,36 @@ export default function BeauticianProfile() {
           <Card className="mb-8">
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row gap-6">
-                <div className="flex-1">
-                  <h1 className="text-4xl font-serif font-bold mb-2" data-testid="beautician-name">
-                    {beautician.userName}
-                  </h1>
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-5 h-5 fill-primary text-primary" />
-                      <span className="font-semibold">{beautician.rating || '5.0'}</span>
-                      <span className="text-muted-foreground">({beautician.reviewCount || 0} reviews)</span>
+                <div className="flex gap-6 flex-1">
+                  <Avatar className="h-24 w-24 md:h-32 md:w-32 flex-shrink-0" data-testid="beautician-avatar">
+                    <AvatarImage 
+                      src={profileImages[parseInt(beauticianId || '0') % profileImages.length]} 
+                      alt={beautician.userName} 
+                    />
+                    <AvatarFallback>{beautician.userName?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <h1 className="text-3xl md:text-4xl font-serif font-bold mb-2" data-testid="beautician-name">
+                      {beautician.userName}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-4 mb-4">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-5 h-5 fill-primary text-primary" />
+                        <span className="font-semibold">{beautician.rating || '5.0'}</span>
+                        <span className="text-muted-foreground">({beautician.reviewCount || 0} reviews)</span>
+                      </div>
+                      <Badge>{beautician.experience}</Badge>
                     </div>
-                    <Badge>{beautician.experience}</Badge>
-                  </div>
-                  <p className="text-muted-foreground mb-4" data-testid="beautician-bio">
-                    {beautician.bio}
-                  </p>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="w-4 h-4" />
-                    <span>{beautician.serviceAreas?.join(', ')}</span>
+                    <p className="text-muted-foreground mb-4" data-testid="beautician-bio">
+                      {beautician.bio}
+                    </p>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MapPin className="w-4 h-4" />
+                      <span>{beautician.serviceAreas?.join(', ')}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex-shrink-0">
                   <p className="text-sm text-muted-foreground mb-1">Starting from</p>
                   <p className="text-3xl font-bold">AED {beautician.startingPrice}</p>
                 </div>
