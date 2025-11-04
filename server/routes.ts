@@ -770,6 +770,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a review for a beautician
+  app.post('/api/beauticians/:id/reviews', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const beauticianId = req.params.id;
+      const { rating, comment } = req.body;
+
+      // Validate rating
+      if (!rating || rating < 1 || rating > 5) {
+        return res.status(400).json({ message: "Rating must be between 1 and 5" });
+      }
+
+      // Validate comment
+      if (!comment || comment.trim().length < 10) {
+        return res.status(400).json({ message: "Comment must be at least 10 characters" });
+      }
+
+      // Create review directly for beautician (without requiring booking)
+      const review = await storage.createReview({
+        customerId: userId,
+        beauticianId,
+        rating,
+        comment: comment.trim(),
+        bookingId: null,
+      });
+
+      res.status(201).json(review);
+    } catch (error) {
+      console.error("Error creating review:", error);
+      res.status(500).json({ message: "Failed to create review" });
+    }
+  });
+
   // Get all bookings (admin only)
   app.get('/api/admin/bookings', isAdmin, async (req, res) => {
     try {
