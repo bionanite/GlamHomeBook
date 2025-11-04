@@ -114,6 +114,7 @@ export default function BeauticianProfile() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [bookingStep, setBookingStep] = useState<'details' | 'payment'>('details');
   const [openLocationCombobox, setOpenLocationCombobox] = useState(false);
+  const [openDatePicker, setOpenDatePicker] = useState(false);
 
   // Helper to get consistent image index from beautician ID
   const getImageIndex = (id: string | undefined) => {
@@ -392,7 +393,7 @@ export default function BeauticianProfile() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Date</FormLabel>
-                      <Popover>
+                      <Popover open={openDatePicker} onOpenChange={setOpenDatePicker}>
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
@@ -409,7 +410,10 @@ export default function BeauticianProfile() {
                           <Calendar
                             mode="single"
                             selected={field.value}
-                            onSelect={field.onChange}
+                            onSelect={(date) => {
+                              field.onChange(date);
+                              setOpenDatePicker(false);
+                            }}
                             disabled={(date) => date < new Date()}
                             initialFocus
                           />
