@@ -115,6 +115,14 @@ export default function BeauticianProfile() {
   const [bookingStep, setBookingStep] = useState<'details' | 'payment'>('details');
   const [openLocationCombobox, setOpenLocationCombobox] = useState(false);
 
+  // Helper to get consistent image index from beautician ID
+  const getImageIndex = (id: string | undefined) => {
+    if (!id) return 0;
+    // Sum character codes to get a consistent number
+    const sum = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return sum % profileImages.length;
+  };
+
   // Fetch beautician profile with services
   const { data: beautician, isLoading } = useQuery<any>({
     queryKey: ['/api/beauticians', beauticianId],
@@ -250,7 +258,7 @@ export default function BeauticianProfile() {
                 <div className="flex gap-6 flex-1">
                   <Avatar className="h-24 w-24 md:h-32 md:w-32 flex-shrink-0" data-testid="beautician-avatar">
                     <AvatarImage 
-                      src={profileImages[parseInt(beauticianId || '0') % profileImages.length]} 
+                      src={profileImages[getImageIndex(beauticianId)]} 
                       alt={beautician.userName} 
                     />
                     <AvatarFallback>{beautician.userName?.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
