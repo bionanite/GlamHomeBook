@@ -50,7 +50,7 @@ export default function ManicureServices() {
     <div className="min-h-screen">
       <SEOHead 
         title="Manicure Dubai | Home Manicure Services | Gel & Classic Nails | Kosmospace"
-        description="Book professional manicure services at home in Dubai. Expert nail technicians for classic manicures, gel manicures, nail art, and luxury treatments. Available across Dubai Marina, JBR, Downtown. AED 100-250."
+        description="Book professional manicure services at home in Dubai. Expert nail technicians for classic manicures, gel manicures, nail art, and luxury treatments. Available across Dubai Marina, JBR, Downtown. د.إ 100-250."
         keywords="manicure Dubai, home manicure Dubai, gel manicure Dubai, nail technician Dubai, mobile manicure, manicure at home, Dubai nail services, luxury manicure, nail art Dubai"
       />
       <Header />
@@ -134,19 +134,19 @@ export default function ManicureServices() {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Classic Manicure (AED 100-150):</strong> Nail shaping, cuticle care, hand massage, and polish application</span>
+                  <span className="text-muted-foreground"><strong>Classic Manicure (د.إ 100-150):</strong> Nail shaping, cuticle care, hand massage, and polish application</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Gel Manicure (AED 150-200):</strong> Long-lasting gel polish that stays chip-free for 2-3 weeks</span>
+                  <span className="text-muted-foreground"><strong>Gel Manicure (د.إ 150-200):</strong> Long-lasting gel polish that stays chip-free for 2-3 weeks</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>French Manicure (AED 120-180):</strong> Timeless classic French tips with perfect white edges</span>
+                  <span className="text-muted-foreground"><strong>French Manicure (د.إ 120-180):</strong> Timeless classic French tips with perfect white edges</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Luxury Manicure (AED 180-250):</strong> Premium treatment with exfoliation, hydrating mask, and extended massage</span>
+                  <span className="text-muted-foreground"><strong>Luxury Manicure (د.إ 180-250):</strong> Premium treatment with exfoliation, hydrating mask, and extended massage</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
@@ -198,7 +198,7 @@ export default function ManicureServices() {
               <div className="bg-accent/10 p-6 rounded-lg border my-8">
                 <h4 className="font-semibold mb-2 text-lg">💅 Manicure & Pedicure Combo</h4>
                 <p className="text-sm text-muted-foreground">
-                  Save time and money with our popular manicure + pedicure combo packages. Get both services in one convenient session with special combo pricing starting from AED 220.
+                  Save time and money with our popular manicure + pedicure combo packages. Get both services in one convenient session with special combo pricing starting from د.إ 220.
                 </p>
               </div>
             </div>

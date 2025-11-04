@@ -299,7 +299,7 @@ export default function BeauticianDashboard() {
                         </CardTitle>
                       </div>
                       <Badge variant="secondary" className="text-lg font-semibold">
-                        AED {service.price}
+                        د.إ {service.price}
                       </Badge>
                     </div>
                   </CardHeader>

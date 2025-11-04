@@ -278,7 +278,7 @@ export default function BeauticianProfile() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-sm text-muted-foreground mb-1">Starting from</p>
-                  <p className="text-3xl font-bold">AED {beautician.startingPrice}</p>
+                  <p className="text-3xl font-bold">د.إ {beautician.startingPrice}</p>
                 </div>
               </div>
             </CardContent>
@@ -299,8 +299,7 @@ export default function BeauticianProfile() {
                   <CardContent>
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <DollarSign className="w-4 h-4" />
-                        <span className="font-semibold">AED {service.price}</span>
+                        <span className="font-semibold">د.إ {service.price}</span>
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Clock className="w-4 h-4" />
@@ -372,7 +371,7 @@ export default function BeauticianProfile() {
                   <div className="bg-muted p-4 rounded-lg">
                     <p className="font-semibold mb-2">{selectedService.name}</p>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>AED {selectedService.price}</span>
+                      <span>د.إ {selectedService.price}</span>
                       <span>•</span>
                       <span>{selectedService.duration} minutes</span>
                     </div>

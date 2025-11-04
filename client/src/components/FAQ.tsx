@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     question: "How much do home beauty services cost in Dubai?",
-    answer: "Prices vary by service and beautician expertise. Manicures typically start from AED 100, pedicures from AED 120, lash extensions from AED 200, and makeup services from AED 250. Bridal packages range from AED 800 to AED 2000. Each beautician lists their prices on their profile for full transparency."
+    answer: "Prices vary by service and beautician expertise. Manicures typically start from د.إ 100, pedicures from د.إ 120, lash extensions from د.إ 200, and makeup services from د.إ 250. Bridal packages range from د.إ 800 to د.إ 2000. Each beautician lists their prices on their profile for full transparency."
   },
   {
     question: "Can I book same-day beauty services?",

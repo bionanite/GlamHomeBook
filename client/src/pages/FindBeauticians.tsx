@@ -251,7 +251,7 @@ export default function FindBeauticians() {
                       {/* Price Range */}
                       <div>
                         <label className="text-sm font-medium mb-2 block">
-                          Price Range: AED {priceRange[0]} - {priceRange[1]}
+                          Price Range: د.إ {priceRange[0]} - {priceRange[1]}
                         </label>
                         <Slider
                           min={100}
@@ -347,7 +347,7 @@ export default function FindBeauticians() {
                             <div className="flex items-center justify-between pt-4 border-t">
                               <div>
                                 <p className="text-sm text-muted-foreground">Starting from</p>
-                                <p className="font-semibold text-lg">AED {beautician.startingPrice}</p>
+                                <p className="font-semibold text-lg">د.إ {beautician.startingPrice}</p>
                               </div>
                               <Button 
                                 onClick={() => handleViewProfile(beautician.id)}

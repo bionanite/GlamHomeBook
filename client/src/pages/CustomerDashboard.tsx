@@ -229,7 +229,7 @@ export default function CustomerDashboard() {
                           </div>
                           <div className="text-right">
                             <p className="text-2xl font-bold" data-testid={`booking-amount-${booking.id}`}>
-                              AED {booking.totalAmount}
+                              د.إ {booking.totalAmount}
                             </p>
                           </div>
                         </div>
@@ -286,7 +286,7 @@ export default function CustomerDashboard() {
                             {getStatusBadge(booking.status)}
                           </div>
                           <div className="text-right">
-                            <p className="text-2xl font-bold">AED {booking.totalAmount}</p>
+                            <p className="text-2xl font-bold">د.إ {booking.totalAmount}</p>
                           </div>
                         </div>
                       </CardHeader>
@@ -397,7 +397,7 @@ export default function CustomerDashboard() {
                           </div>
                           <div className="text-right">
                             <p className="text-2xl font-bold line-through text-muted-foreground">
-                              AED {booking.totalAmount}
+                              د.إ {booking.totalAmount}
                             </p>
                           </div>
                         </div>

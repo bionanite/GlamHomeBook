@@ -10,7 +10,7 @@ export default function BeauticianCardExample() {
         specialties={["Makeup", "Lashes"]}
         rating={4.9}
         bookingCount={287}
-        startingPrice="AED 200"
+        startingPrice="د.إ 200"
         location="Dubai Marina"
       />
     </div>

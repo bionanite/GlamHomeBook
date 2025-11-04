@@ -50,7 +50,7 @@ export default function LashExtensions() {
     <div className="min-h-screen">
       <SEOHead 
         title="Lash Extensions Dubai | Eyelash Extensions | Volume & Classic Lashes | Kosmospace"
-        description="Book professional eyelash extension services in Dubai. Expert lash technicians for classic, volume, hybrid, and mega volume lash extensions. Home service available across Dubai Marina, JBR, Downtown. AED 200-500."
+        description="Book professional eyelash extension services in Dubai. Expert lash technicians for classic, volume, hybrid, and mega volume lash extensions. Home service available across Dubai Marina, JBR, Downtown. د.إ 200-500."
         keywords="lash extensions Dubai, eyelash extensions Dubai, volume lashes Dubai, classic lashes, hybrid lashes, lash artist Dubai, home lash extensions, mobile lash technician Dubai"
       />
       <Header />
@@ -134,27 +134,27 @@ export default function LashExtensions() {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Classic Lash Extensions (AED 200-300):</strong> One extension per natural lash for a natural, mascara-like effect</span>
+                  <span className="text-muted-foreground"><strong>Classic Lash Extensions (د.إ 200-300):</strong> One extension per natural lash for a natural, mascara-like effect</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Volume Lashes (AED 300-400):</strong> Multiple lightweight extensions per lash for fuller, dramatic volume</span>
+                  <span className="text-muted-foreground"><strong>Volume Lashes (د.إ 300-400):</strong> Multiple lightweight extensions per lash for fuller, dramatic volume</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Hybrid Lashes (AED 280-380):</strong> Perfect blend of classic and volume techniques for textured fullness</span>
+                  <span className="text-muted-foreground"><strong>Hybrid Lashes (د.إ 280-380):</strong> Perfect blend of classic and volume techniques for textured fullness</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Mega Volume (AED 400-500):</strong> Ultra-dramatic, fluffy lashes with maximum volume</span>
+                  <span className="text-muted-foreground"><strong>Mega Volume (د.إ 400-500):</strong> Ultra-dramatic, fluffy lashes with maximum volume</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Lash Fills (AED 120-250):</strong> Maintain your gorgeous lashes with regular 2-3 week touch-ups</span>
+                  <span className="text-muted-foreground"><strong>Lash Fills (د.إ 120-250):</strong> Maintain your gorgeous lashes with regular 2-3 week touch-ups</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Lash Removal (AED 50-80):</strong> Safe, professional removal when you're ready for a break</span>
+                  <span className="text-muted-foreground"><strong>Lash Removal (د.إ 50-80):</strong> Safe, professional removal when you're ready for a break</span>
                 </li>
               </ul>
 

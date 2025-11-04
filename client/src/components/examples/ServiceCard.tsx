@@ -8,7 +8,7 @@ export default function ServiceCardExample() {
         image={manicureImage}
         title="Premium Manicure"
         description="Elegant nail care with luxury products and expert techniques"
-        priceRange="AED 150 - 300"
+        priceRange="د.إ 150 - 300"
         rating={4.8}
         reviewCount={124}
       />

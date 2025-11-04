@@ -50,7 +50,7 @@ export default function BridalMakeup() {
   return (
     <div className="min-h-screen">
       <SEOHead 
-        title="Bridal Makeup Dubai | Wedding Makeup Artists | AED 800-2000 | Kosmospace"
+        title="Bridal Makeup Dubai | Wedding Makeup Artists | د.إ 800-2000 | Kosmospace"
         description="Book professional bridal makeup artists in Dubai. Luxury wedding makeup services with trial sessions, airbrush makeup, and complete bridal packages. Available across Dubai Marina, Downtown, JBR, Palm Jumeirah. Certified makeup artists for your special day."
         keywords="bridal makeup Dubai, wedding makeup artist Dubai, bridal makeup artist, Dubai bridal makeup, wedding makeup services, bridal beauty Dubai, makeup trial Dubai, airbrush bridal makeup, luxury bridal makeup"
       />
@@ -178,21 +178,21 @@ export default function BridalMakeup() {
                 Pricing & Packages
               </h3>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                Our bridal makeup packages range from <strong>AED 800 to AED 2,000</strong> depending on the artist's experience level and package inclusions. All packages include:
+                Our bridal makeup packages range from <strong>د.إ 800 to د.إ 2,000</strong> depending on the artist's experience level and package inclusions. All packages include:
               </p>
               
               <div className="bg-card p-6 rounded-lg border my-6">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold mb-1">Essential Bridal Package - AED 800</h4>
+                    <h4 className="font-semibold mb-1">Essential Bridal Package - د.إ 800</h4>
                     <p className="text-sm text-muted-foreground">Wedding day makeup + basic hair styling</p>
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Luxury Bridal Package - AED 1,200</h4>
+                    <h4 className="font-semibold mb-1">Luxury Bridal Package - د.إ 1,200</h4>
                     <p className="text-sm text-muted-foreground">Trial + wedding day makeup + professional hair styling + touch-up kit</p>
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Premium Bridal Package - AED 1,800-2,000</h4>
+                    <h4 className="font-semibold mb-1">Premium Bridal Package - د.إ 1,800-2,000</h4>
                     <p className="text-sm text-muted-foreground">Trial + airbrush wedding makeup + luxury hair styling + touch-up kit + bridal party discounts</p>
                   </div>
                 </div>

@@ -50,7 +50,7 @@ export default function PedicureServices() {
     <div className="min-h-screen">
       <SEOHead 
         title="Pedicure Dubai | Home Pedicure Services | Spa & Luxury Foot Care | Kosmospace"
-        description="Book professional pedicure services at home in Dubai. Expert foot care including classic pedicures, spa pedicures, gel pedicures, and luxury treatments. Available across all Dubai areas. AED 120-300."
+        description="Book professional pedicure services at home in Dubai. Expert foot care including classic pedicures, spa pedicures, gel pedicures, and luxury treatments. Available across all Dubai areas. د.إ 120-300."
         keywords="pedicure Dubai, home pedicure Dubai, spa pedicure, mobile pedicure, pedicure at home, Dubai foot care, luxury pedicure, gel pedicure Dubai, nail salon Dubai"
       />
       <Header />
@@ -134,19 +134,19 @@ export default function PedicureServices() {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Classic Pedicure (AED 120-160):</strong> Nail care, cuticle treatment, exfoliation, and polish</span>
+                  <span className="text-muted-foreground"><strong>Classic Pedicure (د.إ 120-160):</strong> Nail care, cuticle treatment, exfoliation, and polish</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Spa Pedicure (AED 180-220):</strong> Deep exfoliation, hydrating mask, extended massage, and premium polish</span>
+                  <span className="text-muted-foreground"><strong>Spa Pedicure (د.إ 180-220):</strong> Deep exfoliation, hydrating mask, extended massage, and premium polish</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Gel Pedicure (AED 160-220):</strong> Long-lasting gel polish application for chip-free results</span>
+                  <span className="text-muted-foreground"><strong>Gel Pedicure (د.إ 160-220):</strong> Long-lasting gel polish application for chip-free results</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
-                  <span className="text-muted-foreground"><strong>Luxury Pedicure (AED 250-300):</strong> Premium spa treatment with paraffin wax, aromatherapy, and extended relaxation</span>
+                  <span className="text-muted-foreground"><strong>Luxury Pedicure (د.إ 250-300):</strong> Premium spa treatment with paraffin wax, aromatherapy, and extended relaxation</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
@@ -196,7 +196,7 @@ export default function PedicureServices() {
                   Save with our popular combination packages:
                 </p>
                 <ul className="text-sm text-muted-foreground space-y-2">
-                  <li>• <strong>Mani-Pedi Combo:</strong> Complete nail care for hands and feet (from AED 220)</li>
+                  <li>• <strong>Mani-Pedi Combo:</strong> Complete nail care for hands and feet (from د.إ 220)</li>
                   <li>• <strong>Monthly Maintenance Package:</strong> Regular monthly sessions with special rates</li>
                   <li>• <strong>Bridal Packages:</strong> Pre-wedding pampering with trial sessions</li>
                 </ul>

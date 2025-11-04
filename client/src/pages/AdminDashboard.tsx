@@ -404,7 +404,7 @@ export default function AdminDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold" data-testid="text-total-revenue">
-                        AED {overviewMetrics.totalRevenue?.toLocaleString() || '0'}
+                        د.إ {overviewMetrics.totalRevenue?.toLocaleString() || '0'}
                       </div>
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                         {overviewMetrics.revenueGrowth >= 0 ? (
@@ -490,7 +490,7 @@ export default function AdminDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold" data-testid="text-avg-booking-value">
-                        AED {overviewMetrics.averageBookingValue?.toFixed(0) || '0'}
+                        د.إ {overviewMetrics.averageBookingValue?.toFixed(0) || '0'}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         Per transaction
@@ -592,7 +592,7 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="text-right">
                                   <p className="font-semibold" data-testid={`text-customer-spent-${idx}`}>
-                                    AED {customer.totalSpent?.toLocaleString()}
+                                    د.إ {customer.totalSpent?.toLocaleString()}
                                   </p>
                                   <p className="text-xs text-muted-foreground">Total spent</p>
                                 </div>
@@ -660,7 +660,7 @@ export default function AdminDashboard() {
                               </div>
                               <div className="text-center">
                                 <p className="font-semibold" data-testid={`text-beautician-revenue-${idx}`}>
-                                  AED {beautician.totalRevenue?.toLocaleString()}
+                                  د.إ {beautician.totalRevenue?.toLocaleString()}
                                 </p>
                                 <p className="text-xs text-muted-foreground">Revenue</p>
                               </div>
@@ -817,7 +817,7 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Starting Price</p>
-                          <p className="font-medium">AED {beautician.startingPrice}</p>
+                          <p className="font-medium">د.إ {beautician.startingPrice}</p>
                         </div>
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">Availability</p>
@@ -1036,14 +1036,14 @@ export default function AdminDashboard() {
                           <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
                           <div>
                             <p className="text-sm text-muted-foreground">Total Amount</p>
-                            <p className="font-medium">AED {booking.totalAmount}</p>
+                            <p className="font-medium">د.إ {booking.totalAmount}</p>
                           </div>
                         </div>
                         <div className="flex items-start gap-2">
                           <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
                           <div>
                             <p className="text-sm text-muted-foreground">Platform Fee</p>
-                            <p className="font-medium">AED {booking.platformFee}</p>
+                            <p className="font-medium">د.إ {booking.platformFee}</p>
                           </div>
                         </div>
                       </div>
@@ -1231,15 +1231,15 @@ export default function AdminDashboard() {
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <p className="text-muted-foreground">Booking Amount</p>
-                          <p className="font-semibold">AED 1,000</p>
+                          <p className="font-semibold">د.إ 1,000</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Platform Commission ({globalCommission}%)</p>
-                          <p className="font-semibold text-primary">AED {((1000 * globalCommission) / 100).toFixed(2)}</p>
+                          <p className="font-semibold text-primary">د.إ {((1000 * globalCommission) / 100).toFixed(2)}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Beautician Earnings</p>
-                          <p className="font-semibold">AED {(1000 - (1000 * globalCommission) / 100).toFixed(2)}</p>
+                          <p className="font-semibold">د.إ {(1000 - (1000 * globalCommission) / 100).toFixed(2)}</p>
                         </div>
                       </div>
                     </div>

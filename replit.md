@@ -15,6 +15,7 @@ Kosmospace is a luxury beauty services marketplace for Dubai, connecting clients
   - Updated Footer component to dynamically fetch and display social media URLs from database
 - **Beautician Availability Display Fix**: Fixed beautician cards on Find Beauticians page to display user-friendly availability text (e.g., "Available 7 days a week", "Available: Mon, Tue, Wed") instead of raw JSON format.
 - **Beautician Profile Avatar**: Added large beautician profile photo to the profile page header section using Avatar component (96px mobile, 128px desktop) positioned on the left side.
+- **UAE Dirham Currency Symbol**: Replaced all "AED" currency displays with the traditional UAE Dirham symbol "د.إ" throughout the application for a more authentic Dubai market experience.
 
 ## User Preferences
 

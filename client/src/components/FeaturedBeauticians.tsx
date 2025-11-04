@@ -12,7 +12,7 @@ export default function FeaturedBeauticians() {
       specialties: ["Makeup", "Lashes"],
       rating: 4.9,
       bookingCount: 287,
-      startingPrice: "AED 200",
+      startingPrice: "د.إ 200",
       location: "Dubai Marina",
     },
     {
@@ -21,7 +21,7 @@ export default function FeaturedBeauticians() {
       specialties: ["Nails", "Manicure"],
       rating: 4.8,
       bookingCount: 342,
-      startingPrice: "AED 150",
+      startingPrice: "د.إ 150",
       location: "Downtown Dubai",
     },
     {
@@ -30,7 +30,7 @@ export default function FeaturedBeauticians() {
       specialties: ["Makeup", "Pedicure"],
       rating: 5.0,
       bookingCount: 198,
-      startingPrice: "AED 180",
+      startingPrice: "د.إ 180",
       location: "Jumeirah",
     },
   ];
