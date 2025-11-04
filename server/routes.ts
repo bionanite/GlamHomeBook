@@ -1163,6 +1163,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Article count must be 2, 4, or 6" });
       }
 
+      // Check for OpenAI API key before creating the job
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(400).json({ 
+          message: "OpenAI API key is not configured. Please add OPENAI_API_KEY to your Replit Secrets to enable blog generation." 
+        });
+      }
+
       const job = await storage.createBlogGenerationJob({
         requestedBy: req.user.id,
         articleCount,
