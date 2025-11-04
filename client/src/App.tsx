@@ -25,11 +25,13 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/find-beauticians" component={FindBeauticians} />
       <Route path="/become-beautician" component={BeauticianOnboarding} />
+      <Route path="/beautician/onboarding" component={BeauticianOnboarding} />
       <Route path="/beautician/dashboard" component={BeauticianDashboard} />
       <Route path="/customer/dashboard" component={CustomerDashboard} />
       <Route path="/beauticians/:id" component={BeauticianProfile} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
       <Route path="/services/bridal-makeup" component={BridalMakeup} />
       <Route path="/services/manicure" component={ManicureServices} />
       <Route path="/services/pedicure" component={PedicureServices} />
