@@ -32,6 +32,10 @@ export default function AdminDashboard() {
   const [instagramUrl, setInstagramUrl] = useState("");
   const [twitterUrl, setTwitterUrl] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  
+  // Blog generation state
+  const [articleCount, setArticleCount] = useState<number>(2);
+  const [focusKeywords, setFocusKeywords] = useState<string>("");
 
   // Check admin authentication
   useEffect(() => {
@@ -317,6 +321,74 @@ export default function AdminDashboard() {
     enabled: !authLoading && adminUser?.role === 'admin',
   });
 
+  // Blog generation queries
+  const { data: blogPosts = [], refetch: refetchBlogPosts } = useQuery({
+    queryKey: ['/api/blog'],
+    enabled: !authLoading && adminUser?.role === 'admin',
+  });
+
+  const { data: blogJobs = [] } = useQuery({
+    queryKey: ['/api/admin/blog/jobs'],
+    enabled: !authLoading && adminUser?.role === 'admin',
+  });
+
+  // Generate blog articles mutation
+  const generateBlogMutation = useMutation({
+    mutationFn: async () => {
+      const keywords = focusKeywords.split(',').map(k => k.trim()).filter(k => k);
+      const res = await apiRequest('POST', '/api/admin/blog/generate', {
+        articleCount,
+        focusKeywords: keywords,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Generation Started",
+        description: `Generating ${articleCount} articles. This may take a few minutes.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/blog/jobs'] });
+      setFocusKeywords("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to start blog generation. Make sure your OPENAI_API_KEY is set.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Publish blog post mutation
+  const publishBlogMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      const res = await apiRequest('PUT', `/api/admin/blog/${postId}/publish`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Article published successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/blog'] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to publish article", variant: "destructive" });
+    },
+  });
+
+  // Delete blog post mutation
+  const deleteBlogMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      const res = await apiRequest('DELETE', `/api/admin/blog/${postId}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Article deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/blog'] });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete article", variant: "destructive" });
+    },
+  });
+
   if (authLoading || !adminUser || adminUser?.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -343,7 +415,7 @@ export default function AdminDashboard() {
 
           {/* Tabs */}
           <Tabs defaultValue="beauticians" className="space-y-6">
-            <TabsList className="grid w-full max-w-3xl grid-cols-5">
+            <TabsList className="grid w-full max-w-4xl grid-cols-6">
               <TabsTrigger value="analytics" data-testid="tab-analytics">
                 Analytics
               </TabsTrigger>
@@ -352,6 +424,9 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger value="bookings" data-testid="tab-bookings">
                 Bookings ({bookings.length})
+              </TabsTrigger>
+              <TabsTrigger value="content" data-testid="tab-content">
+                Content
               </TabsTrigger>
               <TabsTrigger value="notifications" data-testid="tab-notifications">
                 <MessageCircle className="w-4 h-4 mr-2" />
@@ -1075,6 +1150,166 @@ export default function AdminDashboard() {
                   </Card>
                 ))
               )}
+            </TabsContent>
+
+            {/* Content Studio Tab */}
+            <TabsContent value="content" className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold mb-1">Content Studio</h2>
+                <p className="text-sm text-muted-foreground">Generate AI-powered beauty trend articles for your blog</p>
+              </div>
+
+              {/* Blog Generation Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Generate New Articles</CardTitle>
+                  <CardDescription>
+                    Create multiple SEO-optimized beauty trend articles using AI
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">
+                        Number of Articles
+                      </label>
+                      <div className="flex gap-4">
+                        {[2, 4, 6].map((count) => (
+                          <Button
+                            key={count}
+                            type="button"
+                            variant={articleCount === count ? "default" : "outline"}
+                            className="flex-1"
+                            onClick={() => setArticleCount(count)}
+                            data-testid={`button-article-count-${count}`}
+                          >
+                            {count} Articles
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">
+                        Focus Keywords (Optional)
+                      </label>
+                      <Input
+                        value={focusKeywords}
+                        onChange={(e) => setFocusKeywords(e.target.value)}
+                        placeholder="e.g., Dubai beauty, luxury manicure, bridal makeup"
+                        data-testid="input-focus-keywords"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Separate multiple keywords with commas
+                      </p>
+                    </div>
+
+                    <Button 
+                      className="w-full"
+                      onClick={() => generateBlogMutation.mutate()}
+                      disabled={generateBlogMutation.isPending}
+                      data-testid="button-generate-articles"
+                    >
+                      {generateBlogMutation.isPending ? "Generating..." : "Generate Articles"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Generation Jobs */}
+              {blogJobs.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Generation Jobs</CardTitle>
+                    <CardDescription>Track your article generation progress</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {blogJobs.slice(0, 5).map((job: any) => (
+                        <div key={job.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div className="flex-1">
+                            <div className="font-medium">{job.articleCount} Articles</div>
+                            <div className="text-sm text-muted-foreground">
+                              {job.status === 'completed' ? 'Completed' : job.status === 'generating' ? `Generating... ${job.progress}%` : job.status === 'failed' ? 'Failed' : 'Queued'}
+                            </div>
+                          </div>
+                          {job.status === 'generating' && (
+                            <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-primary transition-all" style={{ width: `${job.progress}%` }} />
+                            </div>
+                          )}
+                          {job.status === 'completed' && (
+                            <Badge variant="default">Done</Badge>
+                          )}
+                          {job.status === 'failed' && (
+                            <Badge variant="destructive">Failed</Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Generated Articles List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Articles</CardTitle>
+                  <CardDescription>
+                    Manage your blog content and publish when ready
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {blogPosts.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <p>No articles yet. Generate some to get started!</p>
+                      </div>
+                    ) : (
+                      blogPosts.map((post: any) => (
+                        <div key={post.id} className="flex items-start gap-4 p-4 border rounded-lg">
+                          {post.coverImage && (
+                            <img 
+                              src={post.coverImage} 
+                              alt={post.title}
+                              className="w-32 h-24 object-cover rounded"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-semibold mb-1">{post.title}</h3>
+                            <p className="text-sm text-muted-foreground mb-2">{post.excerpt}</p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Badge variant="outline">{post.category}</Badge>
+                              <span>{post.readTime} min read</span>
+                              {post.isPublished && <Badge>Published</Badge>}
+                              {!post.isPublished && <Badge variant="secondary">Draft</Badge>}
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            {!post.isPublished && (
+                              <Button
+                                size="sm"
+                                onClick={() => publishBlogMutation.mutate(post.id)}
+                                disabled={publishBlogMutation.isPending}
+                              >
+                                Publish
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deleteBlogMutation.mutate(post.id)}
+                              disabled={deleteBlogMutation.isPending}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* WhatsApp Notifications Tab */}
