@@ -7,6 +7,15 @@ Kosmospace is a luxury beauty services marketplace for Dubai, connecting clients
 ## Recent Updates
 
 ### November 4, 2025
+- **AI Blog Generation Engine**: Complete content marketing system for driving organic traffic
+  - Extended database schema with `blogPosts` and `blogGenerationJobs` tables
+  - OpenAI GPT-4o integration for SEO-optimized Dubai beauty trend articles
+  - DALL-E 3 integration for automatic cover image generation
+  - "Content Studio" admin tab for generating 2/4/6 articles simultaneously
+  - Real-time progress tracking for generation jobs
+  - Article management: publish/unpublish/delete with cover image previews
+  - Focus keyword targeting for SEO optimization
+  - Lazy OpenAI client initialization to handle missing API key gracefully
 - **Location Autocomplete Enhancement**: Added location autocomplete dropdown to homepage hero section using shadcn Combobox component with 70+ Dubai areas. Dropdown opens upward for better UX.
 - **Social Media URL Management**: 
   - Extended `platformSettings` schema with Facebook, Instagram, Twitter, LinkedIn URL fields

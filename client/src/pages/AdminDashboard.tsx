@@ -322,12 +322,12 @@ export default function AdminDashboard() {
   });
 
   // Blog generation queries
-  const { data: blogPosts = [], refetch: refetchBlogPosts } = useQuery({
+  const { data: blogPosts = [], refetch: refetchBlogPosts } = useQuery<any[]>({
     queryKey: ['/api/blog'],
     enabled: !authLoading && adminUser?.role === 'admin',
   });
 
-  const { data: blogJobs = [] } = useQuery({
+  const { data: blogJobs = [] } = useQuery<any[]>({
     queryKey: ['/api/admin/blog/jobs'],
     enabled: !authLoading && adminUser?.role === 'admin',
   });
