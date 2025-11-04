@@ -12,6 +12,7 @@ import { triggerManualOfferGeneration } from "./scheduler";
 import { AnalyticsDashboardService } from "./services/analytics-dashboard";
 import { subDays, startOfDay, endOfDay } from "date-fns";
 import rateLimit from 'express-rate-limit';
+import { generateBlogArticles } from "./services/blogGenerator";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -1150,6 +1151,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching blog post:", error);
       res.status(500).json({ message: "Failed to fetch blog post" });
+    }
+  });
+
+  // Admin blog generation routes
+  app.post('/api/admin/blog/generate', isAdmin, async (req: any, res) => {
+    try {
+      const { articleCount, focusKeywords } = req.body;
+      
+      if (!articleCount || ![2, 4, 6].includes(articleCount)) {
+        return res.status(400).json({ message: "Article count must be 2, 4, or 6" });
+      }
+
+      const job = await storage.createBlogGenerationJob({
+        requestedBy: req.user.id,
+        articleCount,
+        focusKeywords: focusKeywords || [],
+      });
+
+      generateBlogArticles(job.id, articleCount, focusKeywords || [])
+        .catch(error => {
+          console.error('Background blog generation failed:', error);
+        });
+
+      res.json(job);
+    } catch (error) {
+      console.error("Error creating blog generation job:", error);
+      res.status(500).json({ message: "Failed to create blog generation job" });
+    }
+  });
+
+  app.get('/api/admin/blog/jobs', isAdmin, async (req, res) => {
+    try {
+      const jobs = await storage.getAllBlogGenerationJobs();
+      res.json(jobs);
+    } catch (error) {
+      console.error("Error fetching blog generation jobs:", error);
+      res.status(500).json({ message: "Failed to fetch jobs" });
+    }
+  });
+
+  app.get('/api/admin/blog/jobs/:id', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const job = await storage.getBlogGenerationJob(id);
+      
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+      
+      res.json(job);
+    } catch (error) {
+      console.error("Error fetching blog generation job:", error);
+      res.status(500).json({ message: "Failed to fetch job" });
+    }
+  });
+
+  app.put('/api/admin/blog/:id/publish', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const post = await storage.publishBlogPost(id);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Blog post not found" });
+      }
+      
+      res.json(post);
+    } catch (error) {
+      console.error("Error publishing blog post:", error);
+      res.status(500).json({ message: "Failed to publish blog post" });
+    }
+  });
+
+  app.put('/api/admin/blog/:id/unpublish', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const post = await storage.unpublishBlogPost(id);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Blog post not found" });
+      }
+      
+      res.json(post);
+    } catch (error) {
+      console.error("Error unpublishing blog post:", error);
+      res.status(500).json({ message: "Failed to unpublish blog post" });
+    }
+  });
+
+  app.delete('/api/admin/blog/:id', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteBlogPost(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting blog post:", error);
+      res.status(500).json({ message: "Failed to delete blog post" });
     }
   });
 

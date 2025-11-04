@@ -136,10 +136,29 @@ export const blogPosts = pgTable("blog_posts", {
   author: varchar("author").default('Kosmospace Team'),
   category: text("category").notNull(), // 'guides', 'tips', 'trends', 'beauty-101'
   tags: text("tags").array().default([]),
-  isPublished: boolean("is_published").notNull().default(true),
+  isPublished: boolean("is_published").notNull().default(false),
   readTime: integer("read_time").notNull(), // estimated minutes to read
+  seoTitle: text("seo_title"),
+  seoDescription: text("seo_description"),
+  focusKeywords: text("focus_keywords").array().default([]),
+  generatedBy: text("generated_by"), // 'ai' or 'manual'
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  publishedAt: timestamp("published_at"),
+});
+
+// AI blog generation jobs tracking
+export const blogGenerationJobs = pgTable("blog_generation_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestedBy: varchar("requested_by").notNull().references(() => users.id),
+  articleCount: integer("article_count").notNull(), // 2, 4, or 6
+  focusKeywords: text("focus_keywords").array().default([]),
+  status: text("status").notNull().default('queued'), // 'queued', 'generating', 'completed', 'failed'
+  progress: integer("progress").notNull().default(0), // 0-100
+  generatedArticleIds: text("generated_article_ids").array().default([]),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
 });
 
 // Platform settings for global configurations
@@ -209,6 +228,17 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  publishedAt: true,
+});
+
+export const insertBlogGenerationJobSchema = createInsertSchema(blogGenerationJobs).omit({
+  id: true,
+  status: true,
+  progress: true,
+  generatedArticleIds: true,
+  errorMessage: true,
+  createdAt: true,
+  completedAt: true,
 });
 
 export const insertPlatformSettingsSchema = createInsertSchema(platformSettings).omit({
@@ -243,6 +273,9 @@ export type WhatsappMessage = typeof whatsappMessages.$inferSelect;
 
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
+
+export type InsertBlogGenerationJob = z.infer<typeof insertBlogGenerationJobSchema>;
+export type BlogGenerationJob = typeof blogGenerationJobs.$inferSelect;
 
 export type InsertPlatformSettings = z.infer<typeof insertPlatformSettingsSchema>;
 export type PlatformSettings = typeof platformSettings.$inferSelect;

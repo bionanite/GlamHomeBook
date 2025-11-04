@@ -9,6 +9,7 @@ import {
   whatsappMessages,
   platformSettings,
   blogPosts,
+  blogGenerationJobs,
   type User,
   type UpsertUser,
   type Beautician,
@@ -29,6 +30,8 @@ import {
   type InsertPlatformSettings,
   type BlogPost,
   type InsertBlogPost,
+  type BlogGenerationJob,
+  type InsertBlogGenerationJob,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc } from "drizzle-orm";
@@ -105,6 +108,14 @@ export interface IStorage {
   getAllBlogPosts(): Promise<BlogPost[]>;
   getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
+  publishBlogPost(id: string): Promise<BlogPost | undefined>;
+  unpublishBlogPost(id: string): Promise<BlogPost | undefined>;
+  deleteBlogPost(id: string): Promise<void>;
+  
+  // Blog generation jobs
+  createBlogGenerationJob(job: InsertBlogGenerationJob): Promise<BlogGenerationJob>;
+  getAllBlogGenerationJobs(): Promise<BlogGenerationJob[]>;
+  getBlogGenerationJob(id: string): Promise<BlogGenerationJob | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -564,6 +575,52 @@ export class DatabaseStorage implements IStorage {
       .values(post)
       .returning();
     return newPost;
+  }
+
+  async publishBlogPost(id: string): Promise<BlogPost | undefined> {
+    const [post] = await db
+      .update(blogPosts)
+      .set({ isPublished: true, publishedAt: new Date(), updatedAt: new Date() })
+      .where(eq(blogPosts.id, id))
+      .returning();
+    return post;
+  }
+
+  async unpublishBlogPost(id: string): Promise<BlogPost | undefined> {
+    const [post] = await db
+      .update(blogPosts)
+      .set({ isPublished: false, updatedAt: new Date() })
+      .where(eq(blogPosts.id, id))
+      .returning();
+    return post;
+  }
+
+  async deleteBlogPost(id: string): Promise<void> {
+    await db.delete(blogPosts).where(eq(blogPosts.id, id));
+  }
+
+  // Blog generation jobs
+  async createBlogGenerationJob(job: InsertBlogGenerationJob): Promise<BlogGenerationJob> {
+    const [newJob] = await db
+      .insert(blogGenerationJobs)
+      .values(job)
+      .returning();
+    return newJob;
+  }
+
+  async getAllBlogGenerationJobs(): Promise<BlogGenerationJob[]> {
+    return await db
+      .select()
+      .from(blogGenerationJobs)
+      .orderBy(desc(blogGenerationJobs.createdAt));
+  }
+
+  async getBlogGenerationJob(id: string): Promise<BlogGenerationJob | undefined> {
+    const [job] = await db
+      .select()
+      .from(blogGenerationJobs)
+      .where(eq(blogGenerationJobs.id, id));
+    return job;
   }
 }
 
