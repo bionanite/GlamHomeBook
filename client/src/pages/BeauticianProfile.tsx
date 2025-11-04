@@ -433,16 +433,14 @@ export default function BeauticianProfile() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Array.from({ length: 12 }, (_, i) => i + 9).map((hour) => (
-                            <>
-                              <SelectItem key={`${hour}:00`} value={`${hour}:00`}>
-                                {hour}:00 {hour < 12 ? 'AM' : 'PM'}
-                              </SelectItem>
-                              <SelectItem key={`${hour}:30`} value={`${hour}:30`}>
-                                {hour}:30 {hour < 12 ? 'AM' : 'PM'}
-                              </SelectItem>
-                            </>
-                          ))}
+                          {Array.from({ length: 12 }, (_, i) => i + 9).flatMap((hour) => [
+                            <SelectItem key={`${hour}:00`} value={`${hour}:00`}>
+                              {hour}:00 {hour < 12 ? 'AM' : 'PM'}
+                            </SelectItem>,
+                            <SelectItem key={`${hour}:30`} value={`${hour}:30`}>
+                              {hour}:30 {hour < 12 ? 'AM' : 'PM'}
+                            </SelectItem>
+                          ])}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -471,7 +469,7 @@ export default function BeauticianProfile() {
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-full p-0" align="start">
+                        <PopoverContent className="w-[400px] p-0" align="start">
                           <Command>
                             <CommandInput 
                               placeholder="Search Dubai areas..." 
