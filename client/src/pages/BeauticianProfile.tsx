@@ -489,7 +489,13 @@ export default function BeauticianProfile() {
                               field.onChange(date);
                               setOpenDatePicker(false);
                             }}
-                            disabled={(date) => date < new Date()}
+                            disabled={(date) => {
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              const compareDate = new Date(date);
+                              compareDate.setHours(0, 0, 0, 0);
+                              return compareDate < today;
+                            }}
                             initialFocus
                           />
                         </PopoverContent>
