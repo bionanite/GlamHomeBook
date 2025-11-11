@@ -30,6 +30,35 @@ const adminLoginLimiter = rateLimit({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint - for monitoring and load balancers
+  app.get('/api/health', async (req, res) => {
+    try {
+      // Check database connectivity by trying to fetch users count
+      const users = await storage.getAllUsers();
+      const isDbHealthy = Array.isArray(users);
+      
+      if (!isDbHealthy) {
+        throw new Error('Database health check failed');
+      }
+      
+      res.status(200).json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        version: '1.0.0',
+        database: 'connected',
+      });
+    } catch (error: any) {
+      console.error('Health check failed:', error);
+      res.status(503).json({
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        error: error.message,
+        database: 'disconnected',
+      });
+    }
+  });
+
   // Stripe webhook - must be BEFORE body parsing middleware
   // Stripe needs raw body for signature verification
   app.post('/api/stripe/webhook', async (req, res) => {
