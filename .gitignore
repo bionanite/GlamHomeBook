@@ -31,3 +31,6 @@ yarn-error.log*
 # Replit-specific (do not commit)
 .config/
 .local/
+
+# Local deployment files with credentials (do not commit)
+READY_TO_DEPLOY.md
